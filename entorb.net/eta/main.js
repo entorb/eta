@@ -3,12 +3,12 @@ DONE
 if mode = countdown -> items < last_items
 if mode = target -> items > last_items
 wget script for download libs
-
-TODO
-info texts
 store/move targed to eta_settings
 add modes: decrease to 0 / increase to target
+
+TODO/IDEAS
 chart: add linreg-slope (items per min)
+chart: select what to plot: items/min, items, ETA
 */
 
 
