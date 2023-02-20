@@ -5,6 +5,7 @@ if mode = target -> items > last_items
 wget script for download libs
 store/move targed to eta_settings
 add modes: decrease to 0 / increase to target
+reset should delete eta_settings as well
 
 TODO/IDEAS
 chart: add linreg-slope (items per min)
@@ -237,7 +238,14 @@ function calc_start_and_runtime() {
 }
 
 
-// Button-triggered functions
+// FE-triggered functions
+html_input_target.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        setTarget();
+    }
+});
+
 html_input_items.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
         event.preventDefault();
@@ -337,7 +345,10 @@ function add() {
 
 function reset() {
     data = [];
-    window.localStorage.setItem("eta_data", JSON.stringify(data));
+    settings = [];
+    // window.localStorage.setItem("eta_data", JSON.stringify(data));
+    window.localStorage.removeItem('eta_data');
+    window.localStorage.removeItem('eta_settings');
     html_text_eta.innerHTML = "&nbsp;";
     html_text_remaining.innerHTML = "&nbsp;";
     html_text_start.innerHTML = "&nbsp;";
