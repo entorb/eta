@@ -6,6 +6,8 @@
     <meta charset="utf-8">
     <meta name="author" content="Dr. Torben Menke">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="stopwatch/estimate the time of arrival for those who hate waiting">
+    <meta name="keywords" content="eta, stopwatch, items per minute, chart, estimated time of arrival">
     <!-- Tabulator https://tabulator.info/ https://tabulator.info/docs/ -->
     <link href="lib/tabulator.min.css" rel="stylesheet">
     <script src="lib/tabulator-5.4.min.js"></script>
@@ -53,17 +55,13 @@
         <tr>
             <td>Target</td>
             <td><input id="input_target" type="number" min="0" style="text-align: right; font-size:20px; width: 100px;"></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td> <button id="btn2" onclick="reset()">Reset</button> </td>
-            <!-- style="font-size:20px"  -->
+            <td><button id="btn3" onclick="setTarget()">Set</button></td>
         </tr>
     </table>
 
     <p>2. Input</p>
     <input id="input_items" type="number" min="0" style="text-align: right; font-size:20px; width: 100px;">
-    <button id=" btn1" onclick="add()">Add</button>
+    <button id="btn1" onclick="add()">Add</button> &nbsp;&nbsp;&nbsp; <button id="btn2" onclick="reset()">Delete All</button>
     <!-- style="font-size:20px" -->
 
     <p>3. Forecast</p>

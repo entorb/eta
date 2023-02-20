@@ -1,38 +1,52 @@
-// read browsers local storage for last session data
-localStorageData = window.localStorage.getItem("my_data");
-if (localStorageData) {
-    var my_data = JSON.parse(localStorageData);
-} else {
-    var my_data = [];
-}
-localStorageData = window.localStorage.getItem("my_settings");
-if (localStorageData) {
-    var my_settings = JSON.parse(localStorageData);
-} else {
-    var my_settings = {};
-}
-
-
 /*
 DONE
 if mode = countdown -> items < last_items
+if mode = target -> items > last_items
+wget script for download libs
 
 TODO
 info texts
-wget script for download libs
-store/move targed to my_settings
+store/move targed to eta_settings
 add modes: decrease to 0 / increase to target
-if mode = target -> items > last_items
 chart: add linreg-slope (items per min)
 */
 
 
+// html elements
+const html_input_items = document.getElementById("input_items");
+const html_input_target = document.getElementById("input_target");
+const html_div_chart = document.getElementById('div_chart');
+const html_text_eta = document.getElementById("text_eta");
+const html_text_remaining = document.getElementById("text_remaining");
+const html_text_items_p_min = document.getElementById("text_items_p_min");
+const html_text_start = document.getElementById("text_start");
+const html_text_runtime = document.getElementById("text_runtime");
+const html_text_pct = document.getElementById("text_pct");
+
+// read browsers local storage for last session data
+let data;
+localStorageData = window.localStorage.getItem("eta_data");
+if (localStorageData) {
+    data = JSON.parse(localStorageData);
+} else {
+    data = [];
+}
+
+let settings;
+localStorageData = window.localStorage.getItem("eta_settings");
+if (localStorageData) {
+    settings = JSON.parse(localStorageData);
+    html_input_target.value = settings["target"];
+} else {
+    settings = {};
+    html_input_target.value = 0;
+}
 
 
 // setup table
-var table = new Tabulator("#div_table", {
+let table = new Tabulator("#div_table", {
     height: "100%",
-    data: my_data,
+    data: data,
     layout: "fitDataStretch", //fit columns to width of table (optional)
     selectable: false,
     columns: [
@@ -45,13 +59,12 @@ var table = new Tabulator("#div_table", {
 });
 
 function update_table() {
-    table.setData(my_data);
+    table.setData(data);
 }
 
 
 // setup chart
-var chart = echarts.init(document.getElementById('div_chart'));
-
+let chart = echarts.init(html_div_chart);
 
 chart.setOption(
     {
@@ -77,13 +90,12 @@ chart.setOption(
     },
 );
 
-
 function update_chart() {
-    var my_data_eCharts = [];
-    for (var i = 0; i < my_data.length; i++) {
-        var row = my_data[i];
+    let data_echart = [];
+    for (let i = 0; i < data.length; i++) {
+        const row = data[i];
         if (row["items_per_min"]) {
-            my_data_eCharts.push(
+            data_echart.push(
                 [row["datetime"], Math.abs(row["items_per_min"])]
             )
         }
@@ -93,7 +105,7 @@ function update_chart() {
         series:
             [{
                 type: 'line',
-                data: my_data_eCharts,
+                data: data_echart,
                 smooth: true,
                 symbolSize: 10,
                 // markLine: {
@@ -119,37 +131,14 @@ function update_chart() {
 }
 
 
-
 // math helpers
 const zeroPad = (num, places) => String(num).padStart(places, '0')
 
 // function linreg_v1(xArray, yArray) {
-//     // from Lin Reg, see https://www.w3schools.com/ai/ai_regressions.asp
-//     // bad, since using average instead of least squares
-//     // y=slope*x+intercept
-//     // Calculate Sums
-//     var xSum = 0, ySum = 0, xxSum = 0, xySum = 0;
-//     var count = xArray.length;
-//     for (var i = 0, len = count; i < count; i++) {
-//         xSum += xArray[i];
-//         ySum += yArray[i];
-//         xxSum += xArray[i] * xArray[i];
-//         xySum += xArray[i] * yArray[i];
-//     }
+// from Lin Reg, see https://www.w3schools.com/ai/ai_regressions.asp
+// bad, since using average instead of least squares
 
-//     // Calculate slope and intercept
-//     var slope = (count * xySum - xSum * ySum) / (count * xxSum - xSum * xSum);
-//     var intercept = (ySum / count) - (slope * xSum) / count;
-//     if (intercept > 10000) {
-//         console.log("m,b");
-//         console.log([slope, intercept]);
-//     }
-
-//     return [slope, intercept];
-// }
-
-
-function linreg_v2(x, y) {
+function linreg(x, y) {
     // from https://oliverjumpertz.com/simple-linear-regression-theory-math-and-implementation-in-javascript/
     const sumX = x.reduce((prev, curr) => prev + curr, 0);
     const avgX = sumX / x.length;
@@ -176,9 +165,8 @@ function linreg_v2(x, y) {
     return [slope, intercept];
 }
 
-
-
 function toHoursAndMinutes(totalSeconds) {
+    // from https://codingbeautydev.com/blog/javascript-convert-seconds-to-hours-and-minutes/
     const totalMinutes = Math.floor(totalSeconds / 60);
     const seconds = Math.ceil(totalSeconds % 60);
     const hours = Math.floor(totalMinutes / 60);
@@ -187,18 +175,20 @@ function toHoursAndMinutes(totalSeconds) {
 }
 
 function calc_eta_from_all_data() {
-    var xArray = [];
-    var yArray = [];
-    for (var i = 0; i < my_data.length; i++) {
-        var row = my_data[i];
+    let xArray = [];
+    let yArray = [];
+    for (let i = 0; i < data.length; i++) {
+        const row = data[i];
         if (row["remaining"]) {
             xArray.push(row["timestamp"]);
             yArray.push(row["remaining"]);
         }
     }
-    [slope, intercept] = linreg_v2(xArray, yArray);
-    last_row = my_data.slice(-1)[0];
+    const [slope, intercept] = linreg(xArray, yArray);
+    const last_row = data.slice(-1)[0];
 
+    // V1: eta via slope and intercept
+    //  might result in eta<now
     // ts_eta = -intercept / slope;
     // if (last_row["timestamp"] > ts_eta) {
     //     ts_eta = last_row["timestamp"] + 1;
@@ -208,20 +198,20 @@ function calc_eta_from_all_data() {
     // ensure that the eta is not smaller than the latest entry
 
     // V2: eta via slope (= items per sec) and remaining items
-    ts_eta = last_row["timestamp"] + (-1 * last_row["remaining"] / slope);
+    const ts_eta = last_row["timestamp"] + (-1 * last_row["remaining"] / slope);
 
-    d = new Date(ts_eta * 1000);
+    const d = new Date(ts_eta * 1000);
 
-    document.getElementById("text_eta").innerHTML = d.toLocaleString('de-DE');
-    document.getElementById("text_remaining").innerHTML = "<b>" + (new Date(ts_eta * 1000 - Date.now()).toISOString().substring(11, 19)) + "</b>";
-    document.getElementById("text_items_p_min").innerHTML = (Math.round(10 * Math.abs(slope) * 60) / 10);
+    html_text_eta.innerHTML = d.toLocaleString('de-DE');
+    html_text_remaining.innerHTML = "<b>" + (new Date(ts_eta * 1000 - Date.now()).toISOString().substring(11, 19)) + "</b>";
+    html_text_items_p_min.innerHTML = (Math.round(10 * Math.abs(slope) * 60) / 10);
 }
 
-
 function calc_start_and_runtime() {
-    ts_first = my_data[0]["timestamp"];
-    ts_start = ts_first;
+    const ts_first = data[0]["timestamp"];
+    const ts_start = ts_first;
 
+    // idea: calc start if target > 0 and start(items) = 0
     // var xArray = [];
     // var yArray = [];
     // for (var i = 0; i < my_data.length; i++) {
@@ -241,34 +231,52 @@ function calc_start_and_runtime() {
     //     console.log([ts_first, ts_start]);
     // }
 
-
-    d = new Date(ts_start * 1000);
-
-    document.getElementById("text_start").innerHTML = d.toLocaleString('de-DE');
-    document.getElementById("text_runtime").innerHTML = toHoursAndMinutes(Date.now() / 1000 - ts_start);
+    const d = new Date(ts_start * 1000);
+    html_text_start.innerHTML = d.toLocaleString('de-DE');
+    html_text_runtime.innerHTML = toHoursAndMinutes(Date.now() / 1000 - ts_start);
 }
 
 
 // Button-triggered functions
-
-var input_items = document.getElementById("input_items");
-input_items.addEventListener("keypress", function (event) {
-    console.log("123");
+html_input_items.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
         event.preventDefault();
         add();
     }
 });
 
+function setTarget() {
+    const target_new = Number(html_input_target.value);
+    if (target_new == settings["target"]) {
+        // console.log("target unchanged");
+        return; // nothing to change
+    }
+    if (data.length > 0) {
+        // console.log("data already present");
+        alert("In order to change the target, delete the data first");
+        html_input_target.value = settings["target"];
+        return;
+    }
+    else {
+        // console.log("target changed");
+        settings["target"] = target_new;
+        window.localStorage.setItem("eta_settings", JSON.stringify(settings));
+    }
+}
+
 function add() {
-    d = new Date();
-    items = Number(document.getElementById("input_items").value);
-    target = Number(document.getElementById("input_target").value);
-    timestamp = d.getTime() / 1000;
+    if (!settings["target"]) {
+        console.log("setting target")
+        setTarget();
+    }
+    const d = new Date();
+    const items = Number(html_input_items.value);
+    const target = settings["target"];
+    const timestamp = d.getTime() / 1000;
     if (!items | items == 0) {
         return;
     }
-    new_row = {
+    let row_new = {
         "datetime": d,
         "items": items,
         "remaining": target - items,
@@ -276,15 +284,15 @@ function add() {
         "timestamp": timestamp,
 
     }
-    if (my_data.length > 0) {
-        last_row = my_data.slice(-1)[0];
+    if (data.length > 0) {
+        const row_last = data.slice(-1)[0];
 
         // in mode=countdown, we only exept decreasing values
-        if (target == 0 && items >= last_row["items"]) {
+        if (target == 0 && items >= row_last["items"]) {
             return;
         }
         // in mode=countup, we only exept increasing values
-        if (target > 0 && items <= last_row["items"]) {
+        if (target > 0 && items <= row_last["items"]) {
             return;
         }
         // in mode=countup, we do not exept values > target
@@ -292,79 +300,63 @@ function add() {
             return;
         }
 
-        if (items != last_row["items"]) {
+        if (items != row_last["items"]) {
             // calc items_per_min
-            new_row["items_per_min"] = (Math.round(10 * 60 * (items - last_row["items"]) / (timestamp - last_row["timestamp"])) / 10);
+            row_new["items_per_min"] = (Math.round(10 * 60 * (items - row_last["items"]) / (timestamp - row_last["timestamp"])) / 10);
             // calc eta
-            ts_eta = (
+            const ts_eta = (
                 timestamp
-                + (new_row["remaining"] / new_row["items_per_min"] * 60)
+                + (row_new["remaining"] / row_new["items_per_min"] * 60)
             ) * 1000;
-            new_row["eta"] = (new Date(ts_eta)).toLocaleString('de-DE');
+            row_new["eta"] = (new Date(ts_eta)).toLocaleString('de-DE');
         }
     }
-    my_data.push(new_row);
-    window.localStorage.setItem("my_data", JSON.stringify(my_data));
+    data.push(row_new);
+    window.localStorage.setItem("eta_data", JSON.stringify(data));
     // console.log(new_row);
     update_table();
     update_chart();
 
-    if (my_data.length > 1) {
+    if (data.length > 1) {
+        const row_first = data[0];
+        const row_last = data.slice(-1)[0];
         calc_eta_from_all_data();
         calc_start_and_runtime();
 
         // update text_pct
-        first_row = my_data[0];
-        last_row = my_data.slice(-1)[0];
+        let percent;
         if (target == 0) {
-            percent = (Math.round(10 * (100 - 100 * last_row["remaining"] / first_row["remaining"]))) / 10;
+            percent = (Math.round(10 * (100 - 100 * row_last["remaining"] / row_first["remaining"]))) / 10;
         }
         else if (target > 0) {
-            percent = (Math.round(10 * (100 - 100 * last_row["remaining"] / (first_row["items"] + first_row["remaining"])))) / 10;
+            percent = (Math.round(10 * (100 - 100 * row_last["remaining"] / (row_first["items"] + row_first["remaining"])))) / 10;
         }
-        document.getElementById("text_pct").innerHTML = percent + "%";
-
-        // if (target > 0 && items < target) {
-        //     ;
-        // }
-        // else {
-        //     console.log([target, items]);
-        // }
+        html_text_pct.innerHTML = percent + "%";
     }
-
 }
 
-
 function reset() {
-    my_data = [];
-    window.localStorage.setItem("my_data", JSON.stringify(my_data));
-    document.getElementById("text_eta").innerHTML = "&nbsp;";
-    document.getElementById("text_remaining").innerHTML = "&nbsp;";
-    document.getElementById("text_start").innerHTML = "&nbsp;";
-    document.getElementById("text_runtime").innerHTML = "&nbsp;";
-    document.getElementById("text_pct").innerHTML = "&nbsp;";
-    document.getElementById("text_items_p_min").innerHTML = "&nbsp;";
+    data = [];
+    window.localStorage.setItem("eta_data", JSON.stringify(data));
+    html_text_eta.innerHTML = "&nbsp;";
+    html_text_remaining.innerHTML = "&nbsp;";
+    html_text_start.innerHTML = "&nbsp;";
+    html_text_runtime.innerHTML = "&nbsp;";
+    html_text_pct.innerHTML = "&nbsp;";
+    html_text_items_p_min.innerHTML = "&nbsp;";
     update_table();
     update_chart();
 }
 
 
-
 // initalize
-
-if (document.getElementById("input_target").value == "") {
-    document.getElementById("input_target").value = 0;
-}
-
-if (my_data.length > 1) {
+if (data.length > 1) {
     update_chart();
     calc_start_and_runtime();
 }
-
-if (my_data.length > 2) {
+if (data.length > 2) {
     calc_eta_from_all_data();
 }
-
 
 
 // console.log(
