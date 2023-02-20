@@ -6,6 +6,7 @@ wget script for download libs
 store/move targed to eta_settings
 add modes: decrease to 0 / increase to target
 reset should delete eta_settings as well
+download data and upload data
 
 TODO/IDEAS
 chart: add linreg-slope (items per min)
@@ -54,7 +55,7 @@ let table = new Tabulator("#div_table", {
         { title: "Date", field: "date_str", sorter: "datetime", headerSort: false, hozAlign: "center" }, // datetime sorting requires luxon.js library
         { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
         { title: "Remaining", field: "remaining", headerSort: false, hozAlign: "center" },
-        { title: "Items per Min", field: "items_per_min", headerSort: false, hozAlign: "center" },
+        { title: "Items per Min", field: "items_per_min_round", headerSort: false, hozAlign: "center" },
         { title: "ETA", field: "eta", headerSort: false, hozAlign: "left" },
     ],
 });
@@ -254,27 +255,37 @@ html_input_items.addEventListener("keypress", function (event) {
 });
 
 function setTarget() {
-    const target_new = Number(html_input_target.value);
+    let target_new;
+    if (!html_input_target.value) {
+        target_new = 0;
+        html_input_target.value = 0;
+    } else {
+        target_new = Number(html_input_target.value);
+    }
+
     if (target_new == settings["target"]) {
-        // console.log("target unchanged");
+        console.log("target unchanged");
         return; // nothing to change
     }
     if (data.length > 0) {
-        // console.log("data already present");
+        console.log("data already present");
         alert("In order to change the target, delete the data first");
         html_input_target.value = settings["target"];
         return;
     }
     else {
-        // console.log("target changed");
+        console.log("target changed to " + target_new);
         settings["target"] = target_new;
         window.localStorage.setItem("eta_settings", JSON.stringify(settings));
+        // console.log(settings);
     }
 }
 
 function add() {
-    if (!settings["target"]) {
-        console.log("setting target")
+    if ("target" in settings) {
+        // console.log("target: " + settings);
+    } else {
+        console.log("setting target prio to add items value");
         setTarget();
     }
     const d = new Date();
@@ -310,7 +321,8 @@ function add() {
 
         if (items != row_last["items"]) {
             // calc items_per_min
-            row_new["items_per_min"] = (Math.round(10 * 60 * (items - row_last["items"]) / (timestamp - row_last["timestamp"])) / 10);
+            row_new["items_per_min"] = 60 * (items - row_last["items"]) / (timestamp - row_last["timestamp"]);
+            row_new["items_per_min_round"] = (Math.round(10 * row_new["items_per_min"]) / 10);
             // calc eta
             const ts_eta = (
                 timestamp
@@ -345,7 +357,7 @@ function add() {
 
 function reset() {
     data = [];
-    settings = [];
+    settings = {};
     // window.localStorage.setItem("eta_data", JSON.stringify(data));
     window.localStorage.removeItem('eta_data');
     window.localStorage.removeItem('eta_settings');
@@ -369,6 +381,38 @@ if (data.length > 2) {
     calc_eta_from_all_data();
 }
 
+// Test area
+// download data
+function download_data() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify([settings, data]));
+    let html_dl_anchor = document.getElementById("downloadAnchor");
+    html_dl_anchor.setAttribute("href", dataStr);
+    html_dl_anchor.setAttribute("download", "eta.json");
+    html_dl_anchor.click();
+}
+
+// upload data
+function upload_data(input) {
+    // from https://javascript.info/file
+    let file = input.files[0];
+    let reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = function () {
+        const uploaded_data = JSON.parse(reader.result);
+        // console.log(uploaded_data);
+        settings = uploaded_data[0];
+        data = uploaded_data[1];
+        window.localStorage.setItem("eta_settings", JSON.stringify(settings));
+        window.localStorage.setItem("eta_data", JSON.stringify(data));
+        html_input_target.value = settings["target"];
+        update_table();
+        update_chart();
+    };
+    reader.onerror = function () {
+        console.log(reader.error);
+    };
+
+}
 
 // console.log(
 //     Date()

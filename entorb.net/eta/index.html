@@ -14,7 +14,7 @@ TODOs
     <meta name="author" content="Dr. Torben Menke">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="stopwatch/estimate the time of arrival for those who hate waiting">
-    <meta name="keywords" content="eta, stopwatch, items per minute, chart, estimated time of arrival">
+    <meta name="keywords" content="eta, stopwatch, items per minute, chart, estimated time of arrival, idle game countdown">
     <!-- Tabulator https://tabulator.info/ https://tabulator.info/docs/ -->
     <link href="lib/tabulator.min.css" rel="stylesheet">
     <script src="lib/tabulator-5.4.min.js"></script>
@@ -44,9 +44,25 @@ TODOs
 
     <h1>ETA - estimated time of arrival</h1>
 
-    <p><i> What is this?<br> This tool answers the question "How long the fuck do I have to wait?!"<br> Examples: standing in a queue, waiting for a process to finish, ... <br> Countdown mode: set target = 0 (default)<br> Countup mode: set a positive target. </i></p>
+    <p>What is this?<br> This tool answers the question "How long the fuck do I have to wait?!"<br> Examples: standing in a queue, waiting for a process to finish, ...</p>
+    <table>
+        <tr>
+            <td>Countdown</td>
+            <td>mode:</td>
+            <td>set target = 0</td>
+            <td>and enter decreasing</td>
+            <td>item counts until 0</td>
+        </tr>
+        <tr>
+            <td align="right">Countup</td>
+            <td>mode:</td>
+            <td>set target &gt; 0</td>
+            <td>and enter increasing</td>
+            <td>item counts until target</td>
+        </tr>
+    </table>
 
-    <p><i><a href="https://github.com/entorb/tools/tree/main/entorb.net/eta" target="_blank">Source code</a> is open, <a href="/contact.php?origin=ETA">feedback</a> is welcome.</i></p>
+    <p><a href="https://github.com/entorb/tools/tree/main/entorb.net/eta" target="_blank">Source code</a> is open, <a href="/contact.php?origin=ETA">feedback</a> is appreciated.</p>
 
     <p>1. Setup</p>
     <table>
@@ -90,8 +106,16 @@ TODOs
             <td id="text_items_p_min">&nbsp;</td>
         </tr>
     </table>
+    <!-- Tabulator table -->
     <div id="div_table" style="width: 900px;height:400px;"></div>
+    <!-- eCharts chart -->
     <div id="div_chart" style="width: 900px;height:400px;"></div>
+    <hr>
+
+    <h3>Export and Import</h3>
+    <a id="downloadAnchor" style="display:none"></a>
+    <button id="download_data" onclick="download_data()">Export</button> and Import: <input id="upload_data" type="file" onchange="upload_data(this)">
+    <!-- footer -->
     <hr>
     <a href="/">Home</a> - <a href="/contact.php?origin=ETA">Contact</a> - <a href="/impressum.php">Impressum</a>
 </body>
