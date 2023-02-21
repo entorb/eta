@@ -8,6 +8,7 @@ add modes: decrease to 0 / increase to target
 reset should delete eta_settings as well
 download data and upload data
 chart: add speed from linreg-slope (items per min)
+table: hide column remaining for count-down mode
 
 TODO/IDEAS
 chart: select what to plot: items/min, items, ETA
@@ -52,11 +53,12 @@ if (localStorageData) {
     html_input_target.value = 0;
 }
 
-let speed_map_unit_factor = {
-    "Items/min": 1,
-    "Items/hour": 60,
-    "Items/day": 1440, // 60*24
-}
+// to be used later when supporting different units of speed
+// let speed_map_unit_factor = {
+//     "Items/min": 1,
+//     "Items/hour": 60,
+//     "Items/day": 1440, // 60*24
+// }
 
 
 // setup table
@@ -316,6 +318,12 @@ function setTarget() {
         console.log("target changed to " + target_new);
         settings["target"] = target_new;
         window.localStorage.setItem("eta_settings", JSON.stringify(settings));
+
+        if (settings["target"] == 0) {
+            table.hideColumn("remaining");
+        } else {
+            table.showColumn("remaining");
+        }
         // console.log(settings);
     }
 }
@@ -376,14 +384,7 @@ function add() {
     data.push(row_new);
     window.localStorage.setItem("eta_data", JSON.stringify(data));
     console.log(row_new);
-
-    calc_start_runtime_pct();
-    update_table();
-
-    if (data.length >= 2) {
-        const [ts_eta, items_per_min] = calc_eta_speed();
-        update_chart(items_per_min);
-    }
+    update_displays()
 }
 
 function reset() {
@@ -426,9 +427,7 @@ function upload_data(input) {
         window.localStorage.setItem("eta_settings", JSON.stringify(settings));
         window.localStorage.setItem("eta_data", JSON.stringify(data));
         html_input_target.value = settings["target"];
-        update_table();
-        const [ts_eta, items_per_min] = calc_eta_speed();
-        update_chart(items_per_min);
+        update_displays();
     };
     reader.onerror = function () {
         console.log(reader.error);
@@ -442,6 +441,16 @@ function hide_intro() {
     html_text_intro.remove();
 }
 
+function update_displays() {
+    calc_start_runtime_pct();
+    update_table();
+
+    if (data.length >= 2) {
+        const [ts_eta, items_per_min] = calc_eta_speed();
+        update_chart(items_per_min);
+    }
+
+}
 
 // initalize
 if (data.length >= 1) {
