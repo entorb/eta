@@ -48,20 +48,32 @@ if (localStorageData) {
 // setup table
 let table = new Tabulator("#div_table", {
     height: "100%",
-    data: data,
+    // data: data,
     layout: "fitDataStretch", //fit columns to width of table (optional)
     selectable: false,
     columns: [
         { title: "Date", field: "date_str", sorter: "datetime", headerSort: false, hozAlign: "center" }, // datetime sorting requires luxon.js library
         { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
         { title: "Remaining", field: "remaining", headerSort: false, hozAlign: "center" },
-        { title: "Items per Min", field: "items_per_min_round", headerSort: false, hozAlign: "center" },
-        { title: "ETA", field: "eta", headerSort: false, hozAlign: "left" },
+        { title: "Items per Min", field: "items_per_min", headerSort: false, hozAlign: "center" },
+        { title: "ETA", field: "eta_str", headerSort: false, hozAlign: "left" },
     ],
 });
 
 function update_table() {
-    table.setData(data);
+    let data_table = [];
+    for (let i = 0; i < data.length; i++) {
+        // bad: const row = data[i];
+        // clone / copy the origial row
+        // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
+        const row = Object.assign({}, data[i]);
+        row["remaining"] = Math.abs(row["remaining"]);
+        if (row["items_per_min"]) {
+            row["items_per_min"] = Math.abs(Math.round(10 * row["items_per_min"]) / 10);
+        }
+        data_table.push(row)
+    }
+    table.setData(data_table);
 }
 
 
@@ -95,10 +107,11 @@ chart.setOption(
 function update_chart() {
     let data_echart = [];
     for (let i = 0; i < data.length; i++) {
-        const row = data[i];
+        // clone, see update_table
+        const row = Object.assign({}, data[i]);
         if (row["items_per_min"]) {
             data_echart.push(
-                [row["datetime"], Math.abs(row["items_per_min"])]
+                [new Date(row["timestamp"]), Math.abs(row["items_per_min"])]
             )
         }
     }
@@ -296,7 +309,7 @@ function add() {
         return;
     }
     let row_new = {
-        "datetime": d,
+        // "datetime": d,
         "items": items,
         "remaining": target - items,
         "date_str": d.toLocaleString('de-DE'),
@@ -322,20 +335,21 @@ function add() {
         if (items != row_last["items"]) {
             // calc items_per_min
             row_new["items_per_min"] = 60 * (items - row_last["items"]) / (timestamp - row_last["timestamp"]);
-            row_new["items_per_min_round"] = (Math.round(10 * row_new["items_per_min"]) / 10);
             // calc eta
             const ts_eta = (
                 timestamp
                 + (row_new["remaining"] / row_new["items_per_min"] * 60)
-            ) * 1000;
-            row_new["eta"] = (new Date(ts_eta)).toLocaleString('de-DE');
+            );
+            row_new["eta_str"] = (new Date(ts_eta * 1000)).toLocaleString('de-DE');
+            row_new["eta_ts"] = ts_eta;
         }
     }
     data.push(row_new);
     window.localStorage.setItem("eta_data", JSON.stringify(data));
-    // console.log(new_row);
+    console.log(row_new);
     update_table();
     update_chart();
+
 
     if (data.length > 1) {
         const row_first = data[0];
@@ -374,6 +388,10 @@ function reset() {
 
 // initalize
 if (data.length > 1) {
+    // wait for tableBuilt event
+    table.on("tableBuilt", function () {
+        update_table();
+    });
     update_chart();
     calc_start_and_runtime();
 }
