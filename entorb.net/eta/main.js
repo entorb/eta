@@ -52,6 +52,12 @@ if (localStorageData) {
     html_input_target.value = 0;
 }
 
+let speed_map_unit_factor = {
+    "Items/min": 1,
+    "Items/hour": 60,
+    "Items/day": 1440, // 60*24
+}
+
 
 // setup table
 let table = new Tabulator("#div_table", {
@@ -112,7 +118,7 @@ chart.setOption(
     },
 );
 
-function update_chart() {
+function update_chart(speed) {
     let data_echart = [];
     for (let i = 0; i < data.length; i++) {
         // clone, see update_table
@@ -123,8 +129,6 @@ function update_chart() {
             )
         }
     }
-
-    speed = Number(html_text_speed.innerHTML);
 
     chart.setOption({
         series:
@@ -197,7 +201,7 @@ function toHoursAndMinutes(totalSeconds) {
     return zeroPad(hours, 2) + ":" + zeroPad(minutes, 2) + ":" + zeroPad(seconds, 2);
 }
 
-function calc_eta_from_all_data() {
+function calc_eta_speed() {
     let xArray = [];
     let yArray = [];
     for (let i = 0; i < data.length; i++) {
@@ -216,15 +220,17 @@ function calc_eta_from_all_data() {
     // V2: eta via slope (= items per sec) and remaining items
     const last_row = data.slice(-1)[0];
     const ts_eta = last_row["timestamp"] + (-1 * last_row["remaining"] / slope);
+    const items_per_min = Math.abs(slope) * 60000;
 
     const d = new Date(ts_eta);
 
     html_text_eta.innerHTML = d.toLocaleString('de-DE');
     html_text_remaining.innerHTML = "<b>" + (new Date(ts_eta - Date.now()).toISOString().substring(11, 19)) + "</b>";
-    html_text_speed.innerHTML = (Math.round(10 * Math.abs(slope) * 60000) / 10);
+    html_text_speed.innerHTML = (Math.round(10 * items_per_min) / 10);
+    return [ts_eta, items_per_min];
 }
 
-function calc_start_and_runtime() {
+function calc_start_runtime_pct() {
     const ts_first = data[0]["timestamp"];
     // const ts_start = ts_first;
 
@@ -251,8 +257,20 @@ function calc_start_and_runtime() {
     const d = new Date(ts_first);
     html_text_start.innerHTML = d.toLocaleString('de-DE');
     html_text_runtime.innerHTML = toHoursAndMinutes((Date.now() - ts_first) / 1000);
-}
 
+    let percent;
+    const row_first = data[0];
+    const row_last = data.slice(-1)[0];
+    if (settings["target"] == 0) {
+        // remaining is neg for all rows
+        percent = (Math.round(10 * (100 - 100 * row_last["remaining"] / row_first["remaining"]))) / 10;
+    }
+    else {
+        // remaining is pos for all rows
+        percent = (Math.round(10 * (100 * row_last["items"] / (row_first["items"] + row_first["remaining"])))) / 10;
+    }
+    html_text_pct.innerHTML = percent + "%";
+}
 
 // FE-triggered functions
 html_input_target.addEventListener("keypress", function (event) {
@@ -270,6 +288,7 @@ html_input_items.addEventListener("keypress", function (event) {
 });
 
 function setTarget() {
+    console.log("setTarget()");
     let target_new;
     if (!html_input_target.value) {
         target_new = 0;
@@ -278,13 +297,18 @@ function setTarget() {
         target_new = Number(html_input_target.value);
     }
 
+    if (target_new < 0) {
+        console.log("new target negativ");
+        alert("Target must be positiv.");
+        return; // new target is neg
+    }
     if (target_new == settings["target"]) {
         console.log("target unchanged");
         return; // nothing to change
     }
     if (data.length > 0) {
         console.log("data already present");
-        alert("In order to change the target, delete the data first");
+        alert("In order to change the target, delete the data first, see button below.");
         html_input_target.value = settings["target"];
         return;
     }
@@ -318,7 +342,8 @@ function add() {
         "timestamp": timestamp,
 
     }
-    if (data.length > 0) {
+    // data already present before we add the new row
+    if (data.length >= 1) {
         const row_last = data.slice(-1)[0];
 
         // in mode=countdown, we only exept decreasing values
@@ -337,41 +362,28 @@ function add() {
             return;
         }
 
-        if (items != row_last["items"]) {
-            // calc items_per_min
-            row_new["items_per_min"] = 60000 * (items - row_last["items"]) / (timestamp - row_last["timestamp"]);
-            // calc eta
-            const ts_eta = Math.round(
-                timestamp
-                + (row_new["remaining"] / row_new["items_per_min"] * 60000)
-            );
-            row_new["eta_str"] = (new Date(ts_eta)).toLocaleString('de-DE');
-            row_new["eta_ts"] = ts_eta;
-        }
+        // calc items_per_min
+        row_new["items_per_min"] = 60000 * (items - row_last["items"]) / (timestamp - row_last["timestamp"]);
+        // calc eta
+        const ts_eta = Math.round(
+            timestamp
+            + (row_new["remaining"] / row_new["items_per_min"] * 60000)
+        );
+        row_new["eta_str"] = (new Date(ts_eta)).toLocaleString('de-DE');
+        row_new["eta_ts"] = ts_eta;
     }
+
     data.push(row_new);
     window.localStorage.setItem("eta_data", JSON.stringify(data));
     console.log(row_new);
 
-
-    if (data.length > 1) {
-        const row_first = data[0];
-        const row_last = data.slice(-1)[0];
-        calc_eta_from_all_data();
-        calc_start_and_runtime();
-
-        // update text_pct
-        let percent;
-        if (target == 0) {
-            percent = (Math.round(10 * (100 - 100 * row_last["remaining"] / row_first["remaining"]))) / 10;
-        }
-        else if (target > 0) {
-            percent = (Math.round(10 * (100 - 100 * row_last["remaining"] / (row_first["items"] + row_first["remaining"])))) / 10;
-        }
-        html_text_pct.innerHTML = percent + "%";
-    }
+    calc_start_runtime_pct();
     update_table();
-    update_chart();
+
+    if (data.length >= 2) {
+        const [ts_eta, items_per_min] = calc_eta_speed();
+        update_chart(items_per_min);
+    }
 }
 
 function reset() {
@@ -387,22 +399,9 @@ function reset() {
     html_text_pct.innerHTML = "&nbsp;";
     html_text_speed.innerHTML = "&nbsp;";
     update_table();
-    update_chart();
+    update_chart(0);
 }
 
-
-// initalize
-if (data.length > 1) {
-    // wait for tableBuilt event
-    table.on("tableBuilt", function () {
-        update_table();
-    });
-    update_chart();
-    calc_start_and_runtime();
-}
-if (data.length > 2) {
-    calc_eta_from_all_data();
-}
 
 // download data
 function download_data() {
@@ -428,7 +427,8 @@ function upload_data(input) {
         window.localStorage.setItem("eta_data", JSON.stringify(data));
         html_input_target.value = settings["target"];
         update_table();
-        update_chart();
+        const [ts_eta, items_per_min] = calc_eta_speed();
+        update_chart(items_per_min);
     };
     reader.onerror = function () {
         console.log(reader.error);
@@ -441,6 +441,21 @@ function hide_intro() {
     const html_text_intro = document.getElementById('text_intro');
     html_text_intro.remove();
 }
+
+
+// initalize
+if (data.length >= 1) {
+    // wait for tableBuilt event
+    table.on("tableBuilt", function () {
+        update_table();
+    });
+    calc_start_runtime_pct();
+}
+if (data.length >= 2) {
+    const [ts_eta, items_per_min] = calc_eta_speed();
+    update_chart(items_per_min);
+}
+
 
 // Test area
 
