@@ -11,6 +11,8 @@ chart: add speed from linreg-slope (items per min)
 
 TODO/IDEAS
 chart: select what to plot: items/min, items, ETA
+table: remove rows (and recalc the speed afterwards)
+speed unit auto: per min / per hour / per day
 */
 
 
@@ -32,6 +34,12 @@ if (localStorageData) {
     data = JSON.parse(localStorageData);
 } else {
     data = [];
+}
+if (data.length == 0) {
+    html_input_items.value = 1;
+} else {
+    const last_row = data.slice(-1)[0];
+    html_input_items.value = last_row["items"];
 }
 
 let settings;
@@ -315,14 +323,17 @@ function add() {
 
         // in mode=countdown, we only exept decreasing values
         if (target == 0 && items >= row_last["items"]) {
+            alert("New entry must be < previous entry in countdown mode.");
             return;
         }
         // in mode=countup, we only exept increasing values
         if (target > 0 && items <= row_last["items"]) {
+            alert("New entry must be > previous entry in countup mode.");
             return;
         }
         // in mode=countup, we do not exept values > target
         if (target > 0 && items > target) {
+            alert("New entry must not exceed target.");
             return;
         }
 

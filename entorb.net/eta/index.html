@@ -5,8 +5,6 @@ TODOs
 - layout tuning
 - layout for mobile tuning
 - info texts / tooltips?
-- button to hide intro text
-- select speed: items per min/per hour/per day
 -->
 
 <head>
@@ -17,7 +15,7 @@ TODOs
     <meta name="description" content="stopwatch/estimate the time of arrival for those who hate waiting">
     <meta name="keywords" content="eta, stopwatch, items per minute, chart, estimated time of arrival, idle game countdown">
     <!-- my global stylesheet -->
-    <link href="/style.css" rel="stylesheet" />
+    <link href="/style.css" rel="stylesheet">
     <!-- eta stylesheet -->
     <link href="eta.css" rel="stylesheet">
     <!-- Tabulator https://tabulator.info/ https://tabulator.info/docs/ -->
@@ -50,8 +48,8 @@ TODOs
     <div id="text_intro">
         <a id="a_hide_intro" title="Click to hide intro text" href="#" onclick="hide_intro();return false;">hide intro</a>
 
-        <p>This tool answers the question "How long the fuck do I have to wait?!"<br> Examples: standing in a queue, waiting for a process to finish, ...</p>
-        <table>
+        <p>This tool answers the question "How long the fuck do I have to wait?!"<br> Examples: standing in a queue, waiting for a process to finish, reading a book...</p>
+        <table style="white-space: nowrap;">
             <tr>
                 <td>Countdown</td>
                 <td>mode:</td>
@@ -70,51 +68,58 @@ TODOs
 
         <p><a href="https://github.com/entorb/tools/tree/main/entorb.net/eta" target="_blank">Source code</a> is open, <a href="/contact.php?origin=ETA">feedback</a> is appreciated.</p>
     </div>
-
-    <p>1. Setup</p>
     <table>
         <tr>
-            <td>Target</td>
-            <td><input id="input_target" type="number" min="0" style="text-align: right; font-size:20px; width: 100px;"></td>
-            <td><button id="btn3" onclick="setTarget()">Set</button></td>
+            <td>preparation:</td>
+            <td style="text-align: right;">target</td>
+            <td><input id="input_target" type="number" min="0"></td>
+            <td><button id="btn_setTarget" style="width:4em" onclick="setTarget()">Set</button></td>
         </tr>
+        <tr>
+            <td>ongoing:</td>
+            <td>items</td>
+            <td><input id="input_items" type="number" min="0"> </td>
+            <td><button id="btn_add" style="width:4em" onclick="add()">Add</button></td>
+        </tr>
+        <tr>
+            <td>forecast:</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <!-- style="font-size:20px" -->
     </table>
-
-    <p>2. Input</p>
-    <input id="input_items" type="number" min="0" style="text-align: right; font-size:20px; width: 100px;">
-    <button id="btn1" onclick="add()">Add</button> &nbsp;&nbsp;&nbsp; <button id="btn2" onclick="reset()">Delete All</button>
-    <!-- style="font-size:20px" -->
-
-    <p>3. Forecast</p>
     <table>
         <tr>
             <td>ETA</td>
-            <td id="text_eta"><span hidden>21.2.2023, 05:02:20</span></td>
+            <td id="text_eta" style="width:19em">&nbsp;</td>
             <td>Remaining</td>
-            <td id="text_remaining"><span hidden>05:02:20</span></td>
+            <td id="text_remaining" style="text-align: center;">&nbsp;</td>
         </tr>
         <tr>
             <td>Start</td>
             <td id="text_start">&nbsp;</td>
             <td>Runtime</td>
-            <td id="text_runtime">&nbsp;</td>
+            <td id="text_runtime" style="text-align: center;">&nbsp;</td>
         </tr>
         <tr>
             <td>Percent</td>
-            <td id="text_pct">&nbsp;</td>
+            <td id="text_pct" style="text-align: center;">&nbsp;</td>
             <td>Speed</td>
-            <td id="text_speed">&nbsp;</td>
+            <td id="text_speed" style="text-align: center;">&nbsp;</td>
         </tr>
     </table>
     <!-- Tabulator table -->
     <div id="div_table" style="width: 900px;height:400px;"></div>
     <!-- eCharts chart -->
     <div id="div_chart" style="width: 900px;height:400px;"></div>
+
+    <p> <button id="btn_reset" onclick="reset()">Delete All</button></p>
     <hr>
 
     <h3>Export and Import</h3>
     <a id="downloadAnchor" style="display:none"></a>
-    <button id="download_data" onclick="download_data()">Export</button> and Import: <input id="upload_data" type="file" onchange="upload_data(this)">
+    <button id="download_data" onclick="download_data()">Export</button> and <b>Import</b>: <input id="upload_data" type="file" onchange="upload_data(this)">
     <!-- footer -->
     <hr>
     <a href="/">Home</a> - <a href="/contact.php?origin=ETA">Contact</a> - <a href="/impressum.php">Impressum</a>
