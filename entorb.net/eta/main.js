@@ -7,9 +7,9 @@ store/move targed to eta_settings
 add modes: decrease to 0 / increase to target
 reset should delete eta_settings as well
 download data and upload data
+chart: add speed from linreg-slope (items per min)
 
 TODO/IDEAS
-chart: add linreg-slope (items per min)
 chart: select what to plot: items/min, items, ETA
 */
 
@@ -20,7 +20,7 @@ const html_input_target = document.getElementById("input_target");
 const html_div_chart = document.getElementById('div_chart');
 const html_text_eta = document.getElementById("text_eta");
 const html_text_remaining = document.getElementById("text_remaining");
-const html_text_items_p_min = document.getElementById("text_items_p_min");
+const html_text_speed = document.getElementById("text_speed");
 const html_text_start = document.getElementById("text_start");
 const html_text_runtime = document.getElementById("text_runtime");
 const html_text_pct = document.getElementById("text_pct");
@@ -55,7 +55,7 @@ let table = new Tabulator("#div_table", {
         { title: "Date", field: "date_str", sorter: "datetime", headerSort: false, hozAlign: "center" }, // datetime sorting requires luxon.js library
         { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
         { title: "Remaining", field: "remaining", headerSort: false, hozAlign: "center" },
-        { title: "Items per Min", field: "items_per_min", headerSort: false, hozAlign: "center" },
+        { title: "Items per min", field: "items_per_min", headerSort: false, hozAlign: "center" },
         { title: "ETA", field: "eta_str", headerSort: false, hozAlign: "left" },
     ],
 });
@@ -116,6 +116,8 @@ function update_chart() {
         }
     }
 
+    speed = Number(html_text_speed.innerHTML);
+
     chart.setOption({
         series:
             [{
@@ -123,23 +125,21 @@ function update_chart() {
                 data: data_echart,
                 smooth: true,
                 symbolSize: 10,
-                // markLine: {
-                //     symbol: 'none',
-                //     silent: true,
-                //     animation: false,
-                //     lineStyle: {
-                //         color: "#0000ff"
-                //         //type: 'solid'
-                //     },
-                //     data: [
-                //         {
-                //             yAxis: 12,
-                //         },
-                //         {
-                //             yAxis: -12,
-                //         },
-                //     ]
-                // }
+                markLine: {
+                    symbol: 'none',
+                    label: { show: false },
+                    silent: true,
+                    animation: false,
+                    lineStyle: {
+                        color: "#0000ff"
+                        //type: 'solid'
+                    },
+                    data: [
+                        {
+                            yAxis: speed,
+                        },
+                    ]
+                }
             },
             ]
     });
@@ -194,37 +194,31 @@ function calc_eta_from_all_data() {
     let yArray = [];
     for (let i = 0; i < data.length; i++) {
         const row = data[i];
-        if (row["remaining"]) {
-            xArray.push(row["timestamp"]);
-            yArray.push(row["remaining"]);
-        }
+        xArray.push(row["timestamp"]);
+        yArray.push(row["remaining"]);
     }
     const [slope, intercept] = linreg(xArray, yArray);
-    const last_row = data.slice(-1)[0];
+    // slope = speed in items/ms
+    // slope of remaining items is negative
 
     // V1: eta via slope and intercept
-    //  might result in eta<now
+    //  might result in eta < now
     // ts_eta = -intercept / slope;
-    // if (last_row["timestamp"] > ts_eta) {
-    //     ts_eta = last_row["timestamp"] + 1;
-    //     console.log("last > eta");
-    //     console.log([last_row["timestamp"], ts_eta]);
-    // }
-    // ensure that the eta is not smaller than the latest entry
 
     // V2: eta via slope (= items per sec) and remaining items
+    const last_row = data.slice(-1)[0];
     const ts_eta = last_row["timestamp"] + (-1 * last_row["remaining"] / slope);
 
-    const d = new Date(ts_eta * 1000);
+    const d = new Date(ts_eta);
 
     html_text_eta.innerHTML = d.toLocaleString('de-DE');
-    html_text_remaining.innerHTML = "<b>" + (new Date(ts_eta * 1000 - Date.now()).toISOString().substring(11, 19)) + "</b>";
-    html_text_items_p_min.innerHTML = (Math.round(10 * Math.abs(slope) * 60) / 10);
+    html_text_remaining.innerHTML = "<b>" + (new Date(ts_eta - Date.now()).toISOString().substring(11, 19)) + "</b>";
+    html_text_speed.innerHTML = (Math.round(10 * Math.abs(slope) * 60000) / 10);
 }
 
 function calc_start_and_runtime() {
     const ts_first = data[0]["timestamp"];
-    const ts_start = ts_first;
+    // const ts_start = ts_first;
 
     // idea: calc start if target > 0 and start(items) = 0
     // var xArray = [];
@@ -246,9 +240,9 @@ function calc_start_and_runtime() {
     //     console.log([ts_first, ts_start]);
     // }
 
-    const d = new Date(ts_start * 1000);
+    const d = new Date(ts_first);
     html_text_start.innerHTML = d.toLocaleString('de-DE');
-    html_text_runtime.innerHTML = toHoursAndMinutes(Date.now() / 1000 - ts_start);
+    html_text_runtime.innerHTML = toHoursAndMinutes((Date.now() - ts_first) / 1000);
 }
 
 
@@ -304,7 +298,7 @@ function add() {
     const d = new Date();
     const items = Number(html_input_items.value);
     const target = settings["target"];
-    const timestamp = d.getTime() / 1000;
+    const timestamp = d.getTime();
     if (!items | items == 0) {
         return;
     }
@@ -334,21 +328,19 @@ function add() {
 
         if (items != row_last["items"]) {
             // calc items_per_min
-            row_new["items_per_min"] = 60 * (items - row_last["items"]) / (timestamp - row_last["timestamp"]);
+            row_new["items_per_min"] = 60000 * (items - row_last["items"]) / (timestamp - row_last["timestamp"]);
             // calc eta
-            const ts_eta = (
+            const ts_eta = Math.round(
                 timestamp
-                + (row_new["remaining"] / row_new["items_per_min"] * 60)
+                + (row_new["remaining"] / row_new["items_per_min"] * 60000)
             );
-            row_new["eta_str"] = (new Date(ts_eta * 1000)).toLocaleString('de-DE');
+            row_new["eta_str"] = (new Date(ts_eta)).toLocaleString('de-DE');
             row_new["eta_ts"] = ts_eta;
         }
     }
     data.push(row_new);
     window.localStorage.setItem("eta_data", JSON.stringify(data));
     console.log(row_new);
-    update_table();
-    update_chart();
 
 
     if (data.length > 1) {
@@ -367,6 +359,8 @@ function add() {
         }
         html_text_pct.innerHTML = percent + "%";
     }
+    update_table();
+    update_chart();
 }
 
 function reset() {
@@ -380,7 +374,7 @@ function reset() {
     html_text_start.innerHTML = "&nbsp;";
     html_text_runtime.innerHTML = "&nbsp;";
     html_text_pct.innerHTML = "&nbsp;";
-    html_text_items_p_min.innerHTML = "&nbsp;";
+    html_text_speed.innerHTML = "&nbsp;";
     update_table();
     update_chart();
 }
