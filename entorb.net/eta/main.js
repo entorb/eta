@@ -381,7 +381,6 @@ if (data.length > 2) {
     calc_eta_from_all_data();
 }
 
-// Test area
 // download data
 function download_data() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify([settings, data]));
@@ -414,7 +413,16 @@ function upload_data(input) {
 
 }
 
+function hide_intro() {
+    // from https://stackoverflow.com/questions/1070760/javascript-href-vs-onclick-for-callback-function-on-hyperlink
+    const html_text_intro = document.getElementById('text_intro');
+    html_text_intro.remove();
+}
+
+// Test area
+
+
 // console.log(
-//     Date()
+    //     Date()
 // );
 

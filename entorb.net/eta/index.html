@@ -43,36 +43,32 @@ TODOs
 <body>
 
     <h1>ETA - estimated time of arrival</h1>
+    <div id="text_intro">
+        <a id="a_hide_intro" title="Click to hide intro text" href="#" onclick="hide_intro();return false;">hide intro</a>
 
-    <p>What is this?<br> This tool answers the question "How long the fuck do I have to wait?!"<br> Examples: standing in a queue, waiting for a process to finish, ...</p>
-    <table>
-        <tr>
-            <td>Countdown</td>
-            <td>mode:</td>
-            <td>set target = 0</td>
-            <td>and enter decreasing</td>
-            <td>item counts until 0</td>
-        </tr>
-        <tr>
-            <td align="right">Countup</td>
-            <td>mode:</td>
-            <td>set target &gt; 0</td>
-            <td>and enter increasing</td>
-            <td>item counts until target</td>
-        </tr>
-    </table>
+        <p>This tool answers the question "How long the fuck do I have to wait?!"<br> Examples: standing in a queue, waiting for a process to finish, ...</p>
+        <table>
+            <tr>
+                <td>Countdown</td>
+                <td>mode:</td>
+                <td>set target = 0</td>
+                <td>and enter decreasing</td>
+                <td>item counts until 0</td>
+            </tr>
+            <tr>
+                <td style="text-align: right">Countup</td>
+                <td>mode:</td>
+                <td>set target &gt; 0</td>
+                <td>and enter increasing</td>
+                <td>item counts until target</td>
+            </tr>
+        </table>
 
-    <p><a href="https://github.com/entorb/tools/tree/main/entorb.net/eta" target="_blank">Source code</a> is open, <a href="/contact.php?origin=ETA">feedback</a> is appreciated.</p>
+        <p><a href="https://github.com/entorb/tools/tree/main/entorb.net/eta" target="_blank">Source code</a> is open, <a href="/contact.php?origin=ETA">feedback</a> is appreciated.</p>
+    </div>
 
     <p>1. Setup</p>
     <table>
-        <!-- <tr>
-            <td>TODO: Mode</td>
-            <td>countdown <label class="switch">
-                    <input type="checkbox">
-                    <span class="slider round"></span>
-                </label> target </td>
-        </tr> -->
         <tr>
             <td>Target</td>
             <td><input id="input_target" type="number" min="0" style="text-align: right; font-size:20px; width: 100px;"></td>
@@ -89,9 +85,9 @@ TODOs
     <table>
         <tr>
             <td>ETA</td>
-            <td id="text_eta">&nbsp;</td>
+            <td id="text_eta"><span hidden>21.2.2023, 05:02:20</span></td>
             <td>Remaining</td>
-            <td id="text_remaining">&nbsp;</td>
+            <td id="text_remaining"><span hidden>05:02:20</span></td>
         </tr>
         <tr>
             <td>Start</td>
