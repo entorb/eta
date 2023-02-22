@@ -10,10 +10,10 @@ download data and upload data
 chart: add speed from linreg-slope (items per min)
 table: hide column remaining for count-down mode
 enter hist data
+table: remove rows (and recalc the speed afterwards)
 
 TODO/IDEAS
 chart: select what to plot: items/min, items, ETA
-table: remove rows (and recalc the speed afterwards)
 speed unit auto: per min / per hour / per day
 */
 
@@ -70,7 +70,7 @@ let table = new Tabulator("#div_table", {
     height: "100%",
     // data: data,
     layout: "fitDataStretch", //fit columns to width of table (optional)
-    selectable: false,
+    selectable: true,
     columns: [
         { title: "Date", field: "date_str", sorter: "datetime", headerSort: false, hozAlign: "center" }, // datetime sorting requires luxon.js library
         { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
@@ -80,7 +80,7 @@ let table = new Tabulator("#div_table", {
     ],
 });
 
-function update_table() {
+function table_update() {
     let data_table = [];
     for (let i = 0; i < data.length; i++) {
         // bad: const row = data[i];
@@ -96,6 +96,26 @@ function update_table() {
     table.setData(data_table);
 }
 
+function table_delete_rows() {
+    // const selectedRows = table.getSelectedRows();
+    const selectedData = table.getSelectedData();
+    if (selectedData.length == data.length) {
+        reset();
+        return;
+    }
+    for (let i = 0; i < selectedData.length; i++) {
+        const row = selectedData[i];
+        const timestamp_to_delete = row["timestamp"];
+        console.log(timestamp_to_delete);
+        for (let j = data.length - 1; j >= 0; --j) {
+            if (data[j]["timestamp"] == timestamp_to_delete) {
+                data.splice(j, 1);
+            }
+        }
+    }
+    sort_data();
+    update_displays();
+}
 
 // setup chart
 let chart = echarts.init(html_div_chart);
@@ -124,7 +144,7 @@ chart.setOption(
     },
 );
 
-function update_chart(speed) {
+function chart_update(speed) {
     let data_echart = [];
     for (let i = 0; i < data.length; i++) {
         // clone, see update_table
@@ -135,7 +155,6 @@ function update_chart(speed) {
             )
         }
     }
-
     chart.setOption({
         series:
             [{
@@ -207,7 +226,7 @@ function toHoursAndMinutes(totalSeconds) {
     return zeroPad(hours, 2) + ":" + zeroPad(minutes, 2) + ":" + zeroPad(seconds, 2);
 }
 
-function calc_eta_speed() {
+function calc_total_eta_and_speed() {
     let xArray = [];
     let yArray = [];
     for (let i = 0; i < data.length; i++) {
@@ -239,7 +258,7 @@ function calc_eta_speed() {
     return [ts_eta, items_per_min];
 }
 
-function calc_start_runtime_pct() {
+function calc_start_runtime_and_pct() {
     const ts_first = data[0]["timestamp"];
     const d = new Date(ts_first);
     html_text_start.innerHTML = d.toLocaleString('de-DE');
@@ -274,9 +293,13 @@ function calc_row_new_items_per_min_and_eta(row_new, row_last) {
 function sort_data() {
     // sorting from https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value
     // console.log(data);
-    data.sort((a, b) => a.timestamp - b.timestamp);
+    if (data.length > 1) {
+        data.sort((a, b) => a.timestamp - b.timestamp);
+    }
     // remove items_per_min from new first item
-    delete data[0]["items_per_min"];
+    if (data.length > 0) {
+        delete data[0]["items_per_min"];
+    }
     // re-calculate items per minute
     for (let i = 1; i < data.length; i++) {
         calc_row_new_items_per_min_and_eta(data[i], data[i - 1])
@@ -347,13 +370,13 @@ function add() {
         console.log("setting target prio to add items value");
         setTarget();
     }
+    if (!html_input_items.value) {
+        return;
+    }
     const d = new Date();
     const items = Number(html_input_items.value);
     const target = settings["target"];
     const timestamp = d.getTime();
-    if (!items | items == 0) {
-        return;
-    }
     let row_new = {
         // "datetime": d,
         "items": items,
@@ -402,8 +425,8 @@ function reset() {
     html_text_runtime.innerHTML = "&nbsp;";
     html_text_pct.innerHTML = "&nbsp;";
     html_text_speed.innerHTML = "&nbsp;";
-    update_table();
-    update_chart(0);
+    table_update();
+    chart_update(0);
 }
 
 function download_data() {
@@ -442,11 +465,11 @@ function hide_intro() {
 }
 
 function update_displays() {
-    calc_start_runtime_pct();
-    update_table();
+    calc_start_runtime_and_pct();
+    table_update();
     if (data.length >= 2) {
-        const [ts_eta, items_per_min] = calc_eta_speed();
-        update_chart(items_per_min);
+        const [ts_eta, items_per_min] = calc_total_eta_and_speed();
+        chart_update(items_per_min);
     }
 }
 
@@ -488,13 +511,13 @@ html_input_hist_datetime.value = (new Date().toISOString().substring(0, 16));
 if (data.length >= 1) {
     // wait for tableBuilt event
     table.on("tableBuilt", function () {
-        update_table();
+        table_update();
     });
-    calc_start_runtime_pct();
+    calc_start_runtime_and_pct();
 }
 if (data.length >= 2) {
-    const [ts_eta, items_per_min] = calc_eta_speed();
-    update_chart(items_per_min);
+    const [ts_eta, items_per_min] = calc_total_eta_and_speed();
+    chart_update(items_per_min);
 }
 
 
