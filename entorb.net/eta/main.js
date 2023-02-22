@@ -9,6 +9,7 @@ reset should delete eta_settings as well
 download data and upload data
 chart: add speed from linreg-slope (items per min)
 table: hide column remaining for count-down mode
+enter hist data
 
 TODO/IDEAS
 chart: select what to plot: items/min, items, ETA
@@ -27,6 +28,9 @@ const html_text_speed = document.getElementById("text_speed");
 const html_text_start = document.getElementById("text_start");
 const html_text_runtime = document.getElementById("text_runtime");
 const html_text_pct = document.getElementById("text_pct");
+const html_input_hist_datetime = document.getElementById("input_hist_datetime");
+const html_input_hist_items = document.getElementById("input_hist_items");
+const html_btn_hist_add = document.getElementById("btn_hist_add");
 
 // read browsers local storage for last session data
 let data;
@@ -237,28 +241,6 @@ function calc_eta_speed() {
 
 function calc_start_runtime_pct() {
     const ts_first = data[0]["timestamp"];
-    // const ts_start = ts_first;
-
-    // idea: calc start if target > 0 and start(items) = 0
-    // var xArray = [];
-    // var yArray = [];
-    // for (var i = 0; i < my_data.length; i++) {
-    //     var row = my_data[i];
-    //     xArray.push(row["timestamp"]);
-    //     yArray.push(row["items"]);
-    // }
-    // [slope, intercept] = linreg_v2(xArray, yArray);
-
-    // ts_start = -intercept / slope;
-    // // ensure that the eta is not smaller than the latest entry
-    // ts_first = my_data[0]["timestamp"];
-
-    // if (ts_start > ts_first) {
-    //     ts_start = ts_first - 1;
-    //     console.log("first < start");
-    //     console.log([ts_first, ts_start]);
-    // }
-
     const d = new Date(ts_first);
     html_text_start.innerHTML = d.toLocaleString('de-DE');
     html_text_runtime.innerHTML = toHoursAndMinutes((Date.now() - ts_first) / 1000);
@@ -276,6 +258,33 @@ function calc_start_runtime_pct() {
     }
     html_text_pct.innerHTML = percent + "%";
 }
+
+function calc_row_new_items_per_min_and_eta(row_new, row_last) {
+    // calc items_per_min
+    row_new["items_per_min"] = 60000 * (row_new["items"] - row_last["items"]) / (row_new["timestamp"] - row_last["timestamp"]);
+    // calc eta
+    const ts_eta = Math.round(
+        row_new["timestamp"]
+        + (row_new["remaining"] / row_new["items_per_min"] * 60000)
+    );
+    row_new["eta_str"] = (new Date(ts_eta)).toLocaleString('de-DE');
+    row_new["eta_ts"] = ts_eta;
+}
+
+function sort_data() {
+    // sorting from https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value
+    // console.log(data);
+    data.sort((a, b) => a.timestamp - b.timestamp);
+    // remove items_per_min from new first item
+    delete data[0]["items_per_min"];
+    // re-calculate items per minute
+    for (let i = 1; i < data.length; i++) {
+        calc_row_new_items_per_min_and_eta(data[i], data[i - 1])
+    }
+    // console.log(data);
+    window.localStorage.setItem("eta_data", JSON.stringify(data));
+}
+
 
 // FE-triggered functions
 html_input_target.addEventListener("keypress", function (event) {
@@ -351,7 +360,6 @@ function add() {
         "remaining": target - items,
         "date_str": d.toLocaleString('de-DE'),
         "timestamp": timestamp,
-
     }
     // data already present before we add the new row
     if (data.length >= 1) {
@@ -373,21 +381,13 @@ function add() {
             return;
         }
 
-        // calc items_per_min
-        row_new["items_per_min"] = 60000 * (items - row_last["items"]) / (timestamp - row_last["timestamp"]);
-        // calc eta
-        const ts_eta = Math.round(
-            timestamp
-            + (row_new["remaining"] / row_new["items_per_min"] * 60000)
-        );
-        row_new["eta_str"] = (new Date(ts_eta)).toLocaleString('de-DE');
-        row_new["eta_ts"] = ts_eta;
+        calc_row_new_items_per_min_and_eta(row_new, row_last);
     }
 
     data.push(row_new);
     window.localStorage.setItem("eta_data", JSON.stringify(data));
     console.log(row_new);
-    update_displays()
+    update_displays();
 }
 
 function reset() {
@@ -406,8 +406,6 @@ function reset() {
     update_chart(0);
 }
 
-
-// download data
 function download_data() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify([settings, data]));
     let html_dl_anchor = document.getElementById("downloadAnchor");
@@ -416,7 +414,6 @@ function download_data() {
     html_dl_anchor.click();
 }
 
-// upload data
 function upload_data(input) {
     // from https://javascript.info/file
     let file = input.files[0];
@@ -447,28 +444,47 @@ function hide_intro() {
 function update_displays() {
     calc_start_runtime_pct();
     update_table();
-
     if (data.length >= 2) {
         const [ts_eta, items_per_min] = calc_eta_speed();
         update_chart(items_per_min);
     }
-
 }
 
+function add_hist() {
+    if (!settings["target"]) {
+        alert("set target first");
+        return;
+    }
+    const datetime_str = html_input_hist_datetime.value;
+    if (!datetime_str) {
+        alert("invalid date / time");
+        return;
+    }
+    if (html_input_hist_items.value == "") {
+        alert("value missing");
+        return;
+    }
+    const items = Number(html_input_hist_items.value);
 
+    const timestamp = Date.parse(datetime_str);
+    const d = new Date(timestamp);
 
-function add_hist(d = new Date()) {
-    console.log(d);
-
-    // const datetime_str = html_input_hist_datetime.value;
-    // console.log(datetime_str);
-    // if (!datetime_str) { alert("invalid date / time"); }
-    // console.log(html_input_hist_items.value);
-
+    let row_new = {
+        // "datetime": d,
+        "items": items,
+        "remaining": settings["target"] - items,
+        "date_str": d.toLocaleString('de-DE'),
+        "timestamp": d.getTime(),
+    }
+    data.push(row_new);
+    sort_data();
+    update_displays();
 }
-
 
 // initalize
+// hist_datetime to now
+html_input_hist_datetime.value = (new Date().toISOString().substring(0, 16));
+
 if (data.length >= 1) {
     // wait for tableBuilt event
     table.on("tableBuilt", function () {
