@@ -49,6 +49,15 @@ TODOs
         <a id="a_hide_intro" title="Click to hide intro text" href="#" onclick="hide_intro();return false;">hide intro</a>
 
         <p>This tool answers the question "How long the fuck do I have to wait?!"<br> Examples: standing in a queue, waiting for a process to finish, reading a book...</p>
+
+        <p>Usage</p>
+        <ol>
+            <li>enter target<br>(what you are waiting for: 0 people before you in queue, 100% of a process, 234 pages of a book)</li>
+            <li>enter current item count<br> (people before you in queue / percentage of process completion / pages read in book...)</li>
+            <li>repeat 2. whenever the items change and you feel like</li>
+        </ol>
+
+        <p>Modes</p>
         <table style="white-space: nowrap;">
             <tr>
                 <td>Countdown</td>
@@ -79,7 +88,7 @@ TODOs
         <tr>
             <td>ongoing:</td>
             <td>items</td>
-            <td><input id="input_items" type="number" min="0"> </td>
+            <td><input id="input_items" type="number" min="0"></td>
             <td><button id="btn_add" style="width:4em" onclick="add()">Add</button></td>
         </tr>
         <tr>

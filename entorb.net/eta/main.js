@@ -227,7 +227,10 @@ function calc_eta_speed() {
     const d = new Date(ts_eta);
 
     html_text_eta.innerHTML = d.toLocaleString('de-DE');
-    html_text_remaining.innerHTML = "<b>" + (new Date(ts_eta - Date.now()).toISOString().substring(11, 19)) + "</b>";
+    let ms_remaining = (ts_eta - Date.now()); // alternatively use last_row["timestamp"]
+    if (ms_remaining < 0) { ms_remaining = 0; }
+    html_text_remaining.innerHTML = "<b>" + toHoursAndMinutes(ms_remaining / 1000); + "</b>";
+    // html_text_remaining.innerHTML = "<b>" + (new Date(ts_eta - Date.now()).toISOString().substring(11, 19) + "</b>");
     html_text_speed.innerHTML = (Math.round(10 * items_per_min) / 10);
     return [ts_eta, items_per_min];
 }
@@ -451,6 +454,19 @@ function update_displays() {
     }
 
 }
+
+
+
+function add_hist(d = new Date()) {
+    console.log(d);
+
+    // const datetime_str = html_input_hist_datetime.value;
+    // console.log(datetime_str);
+    // if (!datetime_str) { alert("invalid date / time"); }
+    // console.log(html_input_hist_items.value);
+
+}
+
 
 // initalize
 if (data.length >= 1) {
