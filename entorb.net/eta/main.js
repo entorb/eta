@@ -9,12 +9,15 @@ reset should delete eta_settings as well
 download data and upload data
 chart: add speed from linreg-slope (items per min)
 table: hide column remaining for count-down mode
-enter hist data
+add historical data
 table: remove rows (and recalc the speed afterwards)
+chart: select what to plot: items, items/min, ETA
+remaining time: render text dynamically: days, hours, min, sec
 
 TODO/IDEAS
-chart: select what to plot: items/min, items, ETA
 speed unit auto: per min / per hour / per day
+remaining time: update dynamically every second
+https://www.sitepoint.com/build-javascript-countdown-timer-no-dependencies/
 */
 
 
@@ -31,6 +34,11 @@ const html_text_pct = document.getElementById("text_pct");
 const html_input_hist_datetime = document.getElementById("input_hist_datetime");
 const html_input_hist_items = document.getElementById("input_hist_items");
 const html_btn_hist_add = document.getElementById("btn_hist_add");
+const html_sel_chart_y2 = document.getElementById("sel_chart_y2");
+
+// global variables
+var items_per_min_total = 0;
+var timestamp_eta_total = Date.now();
 
 // read browsers local storage for last session data
 let data;
@@ -106,7 +114,6 @@ function table_delete_rows() {
     for (let i = 0; i < selectedData.length; i++) {
         const row = selectedData[i];
         const timestamp_to_delete = row["timestamp"];
-        console.log(timestamp_to_delete);
         for (let j = data.length - 1; j >= 0; --j) {
             if (data[j]["timestamp"] == timestamp_to_delete) {
                 data.splice(j, 1);
@@ -119,67 +126,143 @@ function table_delete_rows() {
 
 // setup chart
 let chart = echarts.init(html_div_chart);
-
+//https://echarts.apache.org/en/option.html#color
+// const chart_colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
+const chart_colors = ['#3ba272', '#5470c6', '#91cc75',];
 chart.setOption(
     {
-        title: {
-            text: 'Items per Minute'
-        },
+        // title: { text: 'Items per Minute' },
         tooltip: {},
         legend: {},
-        xAxis: {
-            type: 'time',
-        },
-        yAxis: {
-            type: 'value',
-        },
         grid: {
             // define margins
             containLabel: false,
             left: 50,
             bottom: 20,
             top: 30,
-            right: 10,
+            right: 150,
         },
     },
 );
 
-function chart_update(speed) {
-    let data_echart = [];
+function chart_update() {
+    let data_echart_items = [];
+    let data_echart_speed = [];
+    let data_echart_eta = [];
+    mode = html_sel_chart_y2.value;
+
     for (let i = 0; i < data.length; i++) {
         // clone, see update_table
         const row = Object.assign({}, data[i]);
+        data_echart_items.push(
+            [new Date(row["timestamp"]), row["items"]]);
         if (row["items_per_min"]) {
-            data_echart.push(
+            data_echart_speed.push(
                 [new Date(row["timestamp"]), Math.abs(row["items_per_min"])]
+            )
+            data_echart_eta.push(
+                [new Date(row["timestamp"]), new Date(row["eta_ts"])]
             )
         }
     }
-    chart.setOption({
-        series:
-            [{
-                type: 'line',
-                data: data_echart,
-                smooth: true,
-                symbolSize: 10,
-                markLine: {
-                    symbol: 'none',
-                    label: { show: false },
-                    silent: true,
-                    animation: false,
-                    lineStyle: {
-                        color: "#0000ff"
-                        //type: 'solid'
-                    },
-                    data: [
-                        {
-                            yAxis: speed,
-                        },
-                    ]
-                }
-            },
-            ]
-    });
+
+    const yAxis_items = {
+        name: 'Items',
+        position: 'left',
+        type: 'value',
+        nameTextStyle: { color: chart_colors[0] },
+        axisLabel: {
+            textStyle: {
+                color: chart_colors[0]
+            }
+        }
+    }
+
+    const yAxis2_common = {
+        position: 'right',
+        nameTextStyle: { color: chart_colors[1] },
+        axisLabel: { textStyle: { color: chart_colors[1] } },
+        splitLine: { show: false }, // no grid line
+    };
+
+    const yAxis2_speed = {
+        ...yAxis2_common, ...{
+            name: 'Speed',
+            type: 'value',
+        }
+    }
+
+    const yAxis2_eta = {
+        ...yAxis2_common, ...{
+            name: 'ETA',
+            type: 'time',
+        }
+    }
+
+    const series_common = {
+        type: 'line',
+        smooth: true,
+        symbolSize: 10,
+        silent: true,
+        animation: false,
+    }
+
+    const series_items = {
+        ...series_common, ...{
+            yAxisIndex: 0,
+            data: data_echart_items,
+            color: chart_colors[0],
+            areaStyle: { opacity: 0.5 }
+        }
+    };
+
+    const series_speed = {
+        ...series_common, ...{
+            yAxisIndex: 1,
+            color: chart_colors[1],
+            data: data_echart_speed,
+            markLine: {
+                symbol: 'none',
+                label: { show: false },
+                silent: true,
+                animation: true,
+                data: [{ yAxis: items_per_min_total, },]
+            }
+        }
+    };
+
+    const series_eta = {
+        ...series_common, ...{
+            yAxisIndex: 1,
+            color: chart_colors[1],
+            data: data_echart_eta,
+            markLine: {
+                symbol: 'none',
+                label: { show: false },
+                silent: true,
+                animation: true,
+                data: [{ yAxis: new Date(timestamp_eta_total), },]
+            }
+        }
+    };
+
+
+
+
+    if (mode == 'speed') {
+        chart.setOption({
+            series: [series_items, series_speed],
+            xAxis: { type: 'time', },
+            yAxis: [yAxis_items, yAxis2_speed]
+        });
+    }
+    else if (mode == 'eta') {
+        chart.setOption({
+            series: [series_items, series_eta],
+            xAxis: { type: 'time', },
+            yAxis: [yAxis_items, yAxis2_eta],
+        });
+    }
 }
 
 
@@ -217,13 +300,26 @@ function linreg(x, y) {
     return [slope, intercept];
 }
 
-function toHoursAndMinutes(totalSeconds) {
-    // from https://codingbeautydev.com/blog/javascript-convert-seconds-to-hours-and-minutes/
-    const totalMinutes = Math.floor(totalSeconds / 60);
-    const seconds = Math.ceil(totalSeconds % 60);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return zeroPad(hours, 2) + ":" + zeroPad(minutes, 2) + ":" + zeroPad(seconds, 2);
+function remaining_seconds_to_readable_time(totalSeconds) {
+    // based https://codingbeautydev.com/blog/javascript-convert-seconds-to-hours-and-minutes/
+    totalSeconds = Math.floor(totalSeconds);
+    if (totalSeconds < 0) {
+        return "";
+    } else if (totalSeconds < 60) {
+        return totalSeconds.toString() + "s";
+    } else if (totalSeconds < 3600) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return minutes.toString() + ":" + zeroPad(seconds, 2) + "min"
+    } else if (totalSeconds < 86400) { //3600*24
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.round((totalSeconds - hours * 3600) / 60);
+        return hours.toString() + ":" + zeroPad(minutes, 2) + "h"
+    } else {
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.round((totalSeconds - days * 86400) / 3600);
+        return days.toString() + "d " + hours.toString() + "h"
+    }
 }
 
 function calc_total_eta_and_speed() {
@@ -244,25 +340,23 @@ function calc_total_eta_and_speed() {
 
     // V2: eta via slope (= items per sec) and remaining items
     const last_row = data.slice(-1)[0];
-    const ts_eta = last_row["timestamp"] + (-1 * last_row["remaining"] / slope);
-    const items_per_min = Math.abs(slope) * 60000;
+    timestamp_eta_total = last_row["timestamp"] + (-1 * last_row["remaining"] / slope);
+    items_per_min_total = Math.abs(slope) * 60000;
 
-    const d = new Date(ts_eta);
+    const d = new Date(timestamp_eta_total);
 
     html_text_eta.innerHTML = d.toLocaleString('de-DE');
-    let ms_remaining = (ts_eta - Date.now()); // alternatively use last_row["timestamp"]
+    let ms_remaining = (timestamp_eta_total - Date.now()); // alternatively use last_row["timestamp"]
     if (ms_remaining < 0) { ms_remaining = 0; }
-    html_text_remaining.innerHTML = "<b>" + toHoursAndMinutes(ms_remaining / 1000); + "</b>";
-    // html_text_remaining.innerHTML = "<b>" + (new Date(ts_eta - Date.now()).toISOString().substring(11, 19) + "</b>");
-    html_text_speed.innerHTML = (Math.round(10 * items_per_min) / 10);
-    return [ts_eta, items_per_min];
+    html_text_remaining.innerHTML = "<b>" + remaining_seconds_to_readable_time(ms_remaining / 1000); + "</b>";
+    html_text_speed.innerHTML = (Math.round(10 * items_per_min_total) / 10);
 }
 
 function calc_start_runtime_and_pct() {
     const ts_first = data[0]["timestamp"];
     const d = new Date(ts_first);
     html_text_start.innerHTML = d.toLocaleString('de-DE');
-    html_text_runtime.innerHTML = toHoursAndMinutes((Date.now() - ts_first) / 1000);
+    html_text_runtime.innerHTML = remaining_seconds_to_readable_time((Date.now() - ts_first) / 1000);
 
     let percent;
     const row_first = data[0];
@@ -409,13 +503,13 @@ function add() {
 
     data.push(row_new);
     window.localStorage.setItem("eta_data", JSON.stringify(data));
-    console.log(row_new);
     update_displays();
 }
 
 function reset() {
     data = [];
     settings = {};
+    items_per_min_total = 0
     // window.localStorage.setItem("eta_data", JSON.stringify(data));
     window.localStorage.removeItem('eta_data');
     window.localStorage.removeItem('eta_settings');
@@ -426,7 +520,7 @@ function reset() {
     html_text_pct.innerHTML = "&nbsp;";
     html_text_speed.innerHTML = "&nbsp;";
     table_update();
-    chart_update(0);
+    chart_update();
 }
 
 function download_data() {
@@ -468,8 +562,8 @@ function update_displays() {
     calc_start_runtime_and_pct();
     table_update();
     if (data.length >= 2) {
-        const [ts_eta, items_per_min] = calc_total_eta_and_speed();
-        chart_update(items_per_min);
+        calc_total_eta_and_speed();
+        chart_update();
     }
 }
 
@@ -508,18 +602,10 @@ function add_hist() {
 // hist_datetime to now
 html_input_hist_datetime.value = (new Date().toISOString().substring(0, 16));
 
-if (data.length >= 1) {
-    // wait for tableBuilt event
-    table.on("tableBuilt", function () {
-        table_update();
-    });
-    calc_start_runtime_and_pct();
-}
-if (data.length >= 2) {
-    const [ts_eta, items_per_min] = calc_total_eta_and_speed();
-    chart_update(items_per_min);
-}
-
+// wait for tableBuilt event and update all data displays afterwards
+table.on("tableBuilt", function () {
+    update_displays();
+});
 
 // Test area
 
