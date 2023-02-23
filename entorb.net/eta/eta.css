@@ -14,3 +14,7 @@ input[type=file] {
     font-size: 20px;
     color: transparent;
 }
+
+select {
+    font-size: 20px;
+}
