@@ -13,11 +13,10 @@ add historical data
 table: remove rows (and recalc the speed afterwards)
 chart: select what to plot: items, items/min, ETA
 remaining time: render text dynamically: days, hours, min, sec
+remaining time: update dynamically every second
 
 TODO/IDEAS
 speed unit auto: per min / per hour / per day
-remaining time: update dynamically every second
-https://www.sitepoint.com/build-javascript-countdown-timer-no-dependencies/
 */
 
 
@@ -37,8 +36,9 @@ const html_btn_hist_add = document.getElementById("btn_hist_add");
 const html_sel_chart_y2 = document.getElementById("sel_chart_y2");
 
 // global variables
-var items_per_min_total = 0;
-var timestamp_eta_total = Date.now();
+var total_items_per_min = 0;
+var total_timestamp_eta = Date.now();
+var total_speed_time_unit = 'minute'; // minute/hour/day
 
 // read browsers local storage for last session data
 let data;
@@ -156,10 +156,12 @@ function chart_update() {
         const row = Object.assign({}, data[i]);
         data_echart_items.push(
             [new Date(row["timestamp"]), row["items"]]);
-        if (row["items_per_min"]) {
+        if ("items_per_min" in row) {
             data_echart_speed.push(
                 [new Date(row["timestamp"]), Math.abs(row["items_per_min"])]
             )
+        }
+        if ("items_per_min" in row) {
             data_echart_eta.push(
                 [new Date(row["timestamp"]), new Date(row["eta_ts"])]
             )
@@ -226,7 +228,7 @@ function chart_update() {
                 label: { show: false },
                 silent: true,
                 animation: true,
-                data: [{ yAxis: items_per_min_total, },]
+                data: [{ yAxis: total_items_per_min, },]
             }
         }
     };
@@ -241,7 +243,7 @@ function chart_update() {
                 label: { show: false },
                 silent: true,
                 animation: true,
-                data: [{ yAxis: new Date(timestamp_eta_total), },]
+                data: [{ yAxis: new Date(total_timestamp_eta), },]
             }
         }
     };
@@ -323,6 +325,7 @@ function remaining_seconds_to_readable_time(totalSeconds) {
 }
 
 function calc_total_eta_and_speed() {
+    const last_row = data.slice(-1)[0];
     let xArray = [];
     let yArray = [];
     for (let i = 0; i < data.length; i++) {
@@ -332,25 +335,41 @@ function calc_total_eta_and_speed() {
     }
     const [slope, intercept] = linreg(xArray, yArray);
     // slope = speed in items/ms
-    // slope of remaining items is negative
+    // target > 0: slope of remaining items is negative
+    // target = 0: slope of remaining items is positive (but remaining items is neg as well)
+    // last_row["remaining"] / slope is positive for both modes
 
-    // V1: eta via slope and intercept
-    //  might result in eta < now
-    // ts_eta = -intercept / slope;
-
-    // V2: eta via slope (= items per sec) and remaining items
-    const last_row = data.slice(-1)[0];
-    timestamp_eta_total = last_row["timestamp"] + (-1 * last_row["remaining"] / slope);
-    items_per_min_total = Math.abs(slope) * 60000;
-
-    const d = new Date(timestamp_eta_total);
-
+    total_timestamp_eta = Math.round(last_row["timestamp"] + (-1 * last_row["remaining"] / slope));
+    const d = new Date(total_timestamp_eta);
     html_text_eta.innerHTML = d.toLocaleString('de-DE');
-    let ms_remaining = (timestamp_eta_total - Date.now()); // alternatively use last_row["timestamp"]
-    if (ms_remaining < 0) { ms_remaining = 0; }
-    html_text_remaining.innerHTML = "<b>" + remaining_seconds_to_readable_time(ms_remaining / 1000); + "</b>";
-    html_text_speed.innerHTML = (Math.round(10 * items_per_min_total) / 10);
+
+    // ensure total_items_per_min to be positive 
+    total_items_per_min = Math.abs(slope) * 60000;
+    if (total_items_per_min > 0.5) {
+        total_speed_time_unit = 'minute';
+        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min) / 10) + " items/min";
+    } else if (total_items_per_min * 60 > 0.5) {
+        total_speed_time_unit = 'hour';
+        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 60) / 10) + " items/h";
+    } else {
+        total_speed_time_unit = 'day';
+        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 1440) / 10) + " items/day";
+    }
+    update_remaining_time();
 }
+
+function update_remaining_time() {
+    let ms_remaining = (total_timestamp_eta - Date.now()); // alternatively use last_row["timestamp"]
+    if (ms_remaining < 0) {
+        ms_remaining = 0;
+        clearInterval(auto_refresh_timeinterval);
+    } else {
+        // re-initalize the refresh timer to 1.0s from now
+        auto_refresh_timeinterval = setInterval(update_remaining_time, 1000);
+        html_text_remaining.innerHTML = "<b>" + remaining_seconds_to_readable_time(ms_remaining / 1000); + "</b>";
+    }
+}
+
 
 function calc_start_runtime_and_pct() {
     const ts_first = data[0]["timestamp"];
@@ -374,14 +393,23 @@ function calc_start_runtime_and_pct() {
 
 function calc_row_new_items_per_min_and_eta(row_new, row_last) {
     // calc items_per_min
-    row_new["items_per_min"] = 60000 * (row_new["items"] - row_last["items"]) / (row_new["timestamp"] - row_last["timestamp"]);
+    if (row_new["timestamp"] != row_last["timestamp"]) {
+        row_new["items_per_min"] = 60000 * (row_new["items"] - row_last["items"]) / (row_new["timestamp"] - row_last["timestamp"]);
+    } else {
+        delete row_new["items_per_min"];
+    }
     // calc eta
-    const ts_eta = Math.round(
-        row_new["timestamp"]
-        + (row_new["remaining"] / row_new["items_per_min"] * 60000)
-    );
-    row_new["eta_str"] = (new Date(ts_eta)).toLocaleString('de-DE');
-    row_new["eta_ts"] = ts_eta;
+    if ("items_per_min" in row_new && row_new["items_per_min"] > 0) {
+        const ts_eta = Math.round(
+            row_new["timestamp"]
+            + (row_new["remaining"] / row_new["items_per_min"] * 60000)
+        );
+        row_new["eta_str"] = (new Date(ts_eta)).toLocaleString('de-DE');
+        row_new["eta_ts"] = ts_eta;
+    } else {
+        delete row_new["eta_str"];
+        delete row_new["eta_ts"];
+    }
 }
 
 function sort_data() {
@@ -509,7 +537,7 @@ function add() {
 function reset() {
     data = [];
     settings = {};
-    items_per_min_total = 0
+    total_items_per_min = 0
     // window.localStorage.setItem("eta_data", JSON.stringify(data));
     window.localStorage.removeItem('eta_data');
     window.localStorage.removeItem('eta_settings');
@@ -607,7 +635,11 @@ table.on("tableBuilt", function () {
     update_displays();
 });
 
+// autorefresh of remaining time
+let auto_refresh_timeinterval = setInterval(update_remaining_time, 1000);
+
 // Test area
+
 
 
 // console.log(
