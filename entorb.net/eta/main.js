@@ -14,10 +14,10 @@ table: remove rows (and recalc the speed afterwards)
 chart: select what to plot: items, items/min, ETA
 remaining time: render text dynamically: days, hours, min, sec
 remaining time: update dynamically every second
+speed unit auto: per min / per hour / per day
 
 TODO/IDEAS
-speed unit auto: per min / per hour / per day
-runtime: dynamically update?
+time since start: dynamically update as well
 */
 
 
@@ -39,7 +39,7 @@ const html_sel_chart_y2 = document.getElementById("sel_chart_y2");
 // global variables
 var total_items_per_min = 0;
 var total_timestamp_eta = Date.now();
-var total_speed_time_unit = 'minute'; // minute/hour/day
+var total_speed_time_unit = 'Minute'; // Minute/Hour/Day
 
 // read browsers local storage for last session data
 let data;
@@ -84,21 +84,25 @@ let table = new Tabulator("#div_table", {
         { title: "Date", field: "date_str", sorter: "datetime", headerSort: false, hozAlign: "center" }, // datetime sorting requires luxon.js library
         { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
         { title: "Remaining", field: "remaining", headerSort: false, hozAlign: "center" },
-        { title: "Items per min", field: "items_per_min", headerSort: false, hozAlign: "center" },
+        { title: "Speed", field: "speed", headerSort: false, hozAlign: "center" },
         { title: "ETA", field: "eta_str", headerSort: false, hozAlign: "left" },
     ],
 });
 
 function table_update() {
+    // IDEA: second function for just instead of recreating the table each time?
     let data_table = [];
+    // BUG: this is only updated when the second time called
+    table.updateColumnDefinition("speed", { title: "Items/" + total_speed_time_unit })
+
     for (let i = 0; i < data.length; i++) {
         // bad: const row = data[i];
         // clone / copy the origial row
         // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
         const row = Object.assign({}, data[i]);
         row["remaining"] = Math.abs(row["remaining"]);
-        if (row["items_per_min"]) {
-            row["items_per_min"] = Math.abs(Math.round(10 * row["items_per_min"]) / 10);
+        if ("items_per_min" in row) {
+            row["speed"] = calc_speed_in_unit(row["items_per_min"]);
         }
         data_table.push(row)
     }
@@ -159,7 +163,7 @@ function chart_update() {
             [new Date(row["timestamp"]), row["items"]]);
         if ("items_per_min" in row) {
             data_echart_speed.push(
-                [new Date(row["timestamp"]), Math.abs(row["items_per_min"])]
+                [new Date(row["timestamp"]), calc_speed_in_unit(row["items_per_min"])]
             )
         }
         if ("items_per_min" in row) {
@@ -190,7 +194,7 @@ function chart_update() {
 
     const yAxis2_speed = {
         ...yAxis2_common, ...{
-            name: 'Speed',
+            name: "Items/" + total_speed_time_unit,
             type: 'value',
         }
     }
@@ -347,14 +351,14 @@ function calc_total_eta_and_speed() {
     // ensure total_items_per_min to be positive
     total_items_per_min = Math.abs(slope) * 60000;
     if (total_items_per_min > 0.5) {
-        total_speed_time_unit = 'minute';
-        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min) / 10) + " items/min";
+        total_speed_time_unit = 'Minute';
+        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min) / 10) + " Items/min";
     } else if (total_items_per_min * 60 > 0.5) {
-        total_speed_time_unit = 'hour';
-        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 60) / 10) + " items/h";
+        total_speed_time_unit = 'Hour';
+        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 60) / 10) + " Items/h";
     } else {
-        total_speed_time_unit = 'day';
-        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 1440) / 10) + " items/day";
+        total_speed_time_unit = 'Day';
+        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 1440) / 10) + " Items/d";
     }
     update_remaining_time();
     // stop auto-refresh timer
@@ -369,6 +373,18 @@ function calc_total_eta_and_speed() {
         }
         interval_auto_refresh = setInterval(update_remaining_time, time_sleeptime);
     }
+}
+
+function calc_speed_in_unit(items_per_min) {
+    let speed = 0;
+    if (total_speed_time_unit == 'Minute') {
+        speed = Math.abs(Math.round(10 * items_per_min) / 10);
+    } else if (total_speed_time_unit == 'Hour') {
+        speed = Math.abs(Math.round(10 * 60 * items_per_min) / 10);
+    } else if (total_speed_time_unit == 'Day') {
+        speed = Math.abs(Math.round(10 * 1440 * items_per_min) / 10);
+    }
+    return speed;
 }
 
 function update_remaining_time() {
@@ -537,7 +553,6 @@ function add() {
             alert("New entry must not exceed target.");
             return;
         }
-
         calc_row_new_items_per_min_and_eta(row_new, row_last);
     }
 
