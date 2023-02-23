@@ -48,12 +48,12 @@ TODOs
     <div id="text_intro">
         <a id="a_hide_intro" title="Click to hide intro text" href="#" onclick="hide_intro();return false;">hide intro</a>
 
-        <p>This tool answers the question "How long the fuck do I have to wait?!"<br> Examples: standing in a queue, waiting for a process to finish, reading a book...</p>
+        <p>This tool answers the question "How long the fuck do I have to wait?!"</p>
 
         <p>Usage</p>
         <ol>
-            <li>enter target<br>(what you are waiting for: 0 people before you in queue, 100% of a process, 234 pages of a book)</li>
-            <li>enter current item count<br> (people before you in queue / percentage of process completion / pages read in book...)</li>
+            <li>enter target<br>(what you are waiting for: 0 people before you in queue, 100% of a process, 234 pages of a book, ...)</li>
+            <li>enter current item count<br> (people still ahead of you in queue, current percentage of process, pages read so far, ...)</li>
             <li>repeat 2. whenever the items change and you feel like</li>
         </ol>
 
@@ -102,13 +102,14 @@ TODOs
     <table>
         <tr>
             <td>ETA</td>
-            <td id="text_eta" style="width:19em">&nbsp;</td>
+            <!-- style="width:12em" -->
+            <td id="text_eta" style="text-align: center;">&nbsp;</td>
             <td>Remaining</td>
             <td id="text_remaining" style="text-align: center;">&nbsp;</td>
         </tr>
         <tr>
             <td>Start</td>
-            <td id="text_start">&nbsp;</td>
+            <td id="text_start" style="text-align: center;">&nbsp;</td>
             <td>Runtime</td>
             <td id="text_runtime" style="text-align: center;">&nbsp;</td>
         </tr>
@@ -121,7 +122,7 @@ TODOs
     </table>
     <!-- Tabulator table -->
     <div id="div_table" style="width: 900px;height:400px;"></div>
-    <button id="btn_table_row_delete" onclick="table_delete_rows()">Delete selected rows</button>
+    <button id="btn_table_row_delete" onclick="table_delete_rows()">Delete selected rows</button>&nbsp;<button id="btn_reset" onclick="reset()">Delete All</button>
     <!-- eCharts chart -->
     <div id="div_chart" style="width: 900px;height:400px;"></div>
     <div>right axis: <select id="sel_chart_y2" onchange="chart_update()">
@@ -129,18 +130,18 @@ TODOs
             <option value="speed">Speed</option>
         </select>
     </div>
-
-    <p> <button id="btn_reset" onclick="reset()">Delete All</button></p>
     <hr>
 
-    <h3>Export and Import</h3>
-    <a id="downloadAnchor" style="display:none"></a>
-    <button id="download_data" onclick="download_data()">Export</button> and <b>Import</b>: <input id="upload_data" type="file" onchange="upload_data(this)">
+    <h2>Advanced Features</h2>
 
     <h3>Add historical data</h3>
     <input id="input_hist_datetime" type="datetime-local">
     <input id="input_hist_items" type="number" min="0">
     <button id="btn_hist_add" style="width:4em" onclick="add_hist()">Add</button>
+
+    <h3>Export and Import</h3>
+    <a id="downloadAnchor" style="display:none"></a>
+    <button id="download_data" onclick="download_data()">Export</button> and <b>Import</b>: <input id="upload_data" type="file" onchange="upload_data(this)">
     <!-- footer -->
     <hr>
     <a href="/">Home</a> - <a href="/contact.php?origin=ETA">Contact</a> - <a href="/impressum.php">Impressum</a>
