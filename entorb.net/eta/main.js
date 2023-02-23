@@ -17,6 +17,7 @@ remaining time: update dynamically every second
 
 TODO/IDEAS
 speed unit auto: per min / per hour / per day
+runtime: dynamically update?
 */
 
 
@@ -341,7 +342,7 @@ function calc_total_eta_and_speed() {
 
     total_timestamp_eta = Math.round(last_row["timestamp"] + (-1 * last_row["remaining"] / slope));
     const d = new Date(total_timestamp_eta);
-    html_text_eta.innerHTML = d.toLocaleString('de-DE');
+    html_text_eta.innerHTML = "<b>" + d.toLocaleString('de-DE') + "</b>";
 
     // ensure total_items_per_min to be positive 
     total_items_per_min = Math.abs(slope) * 60000;
@@ -399,7 +400,7 @@ function calc_row_new_items_per_min_and_eta(row_new, row_last) {
         delete row_new["items_per_min"];
     }
     // calc eta
-    if ("items_per_min" in row_new && row_new["items_per_min"] > 0) {
+    if ("items_per_min" in row_new && row_new["items_per_min"] != 0) {
         const ts_eta = Math.round(
             row_new["timestamp"]
             + (row_new["remaining"] / row_new["items_per_min"] * 60000)
