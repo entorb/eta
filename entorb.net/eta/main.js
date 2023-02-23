@@ -15,6 +15,7 @@ chart: select what to plot: items, items/min, ETA
 remaining time: render text dynamically: days, hours, min, sec
 remaining time: update dynamically every second
 speed unit auto: per min / per hour / per day
+refactoring: extract helper functions separate file
 
 TODO/IDEAS
 time since start: dynamically update as well
@@ -37,44 +38,40 @@ const html_btn_hist_add = document.getElementById("btn_hist_add");
 const html_sel_chart_y2 = document.getElementById("sel_chart_y2");
 
 // global variables
-var total_items_per_min = 0;
-var total_timestamp_eta = Date.now();
-var total_speed_time_unit = 'Minute'; // Minute/Hour/Day
-
-// read browsers local storage for last session data
 let data;
-localStorageData = window.localStorage.getItem("eta_data");
-if (localStorageData) {
-    data = JSON.parse(localStorageData);
-} else {
-    data = [];
-}
-if (data.length == 0) {
-    html_input_items.value = 1;
-} else {
-    const last_row = data.slice(-1)[0];
-    html_input_items.value = last_row["items"];
-}
-
 let settings;
-localStorageData = window.localStorage.getItem("eta_settings");
-if (localStorageData) {
-    settings = JSON.parse(localStorageData);
-    html_input_target.value = settings["target"];
-} else {
-    settings = {};
-    html_input_target.value = 0;
+let total_items_per_min = 0;
+let total_timestamp_eta = Date.now();
+let total_speed_time_unit = 'Minute'; // Minute/Hour/Day
+
+
+// read browser's local storage for last session data
+{
+    const localStorageData = window.localStorage.getItem("eta_data");
+    if (localStorageData) {
+        data = JSON.parse(localStorageData);
+    } else {
+        data = [];
+    }
+    if (data.length == 0) {
+        html_input_items.value = 1;
+    } else {
+        const last_row = data.slice(-1)[0];
+        html_input_items.value = last_row["items"];
+    }
+    const localStorageSettings = window.localStorage.getItem("eta_settings");
+    if (localStorageSettings) {
+        settings = JSON.parse(localStorageSettings);
+        html_input_target.value = settings["target"];
+    } else {
+        settings = {};
+        html_input_target.value = 0;
+    }
 }
 
-// to be used later when supporting different units of speed
-// let speed_map_unit_factor = {
-//     "Items/min": 1,
-//     "Items/hour": 60,
-//     "Items/day": 1440, // 60*24
-// }
 
+// Table
 
-// setup table
 let table = new Tabulator("#div_table", {
     height: "100%",
     // data: data,
@@ -90,7 +87,7 @@ let table = new Tabulator("#div_table", {
 });
 
 function table_update() {
-    // IDEA: second function for just instead of recreating the table each time?
+    // IDEA: second function for just adding a row instead of recreating the table each time?
     let data_table = [];
     // BUG: this is only updated when the second time called
     table.updateColumnDefinition("speed", { title: "Items/" + total_speed_time_unit })
@@ -102,7 +99,7 @@ function table_update() {
         const row = Object.assign({}, data[i]);
         row["remaining"] = Math.abs(row["remaining"]);
         if ("items_per_min" in row) {
-            row["speed"] = calc_speed_in_unit(row["items_per_min"]);
+            row["speed"] = calc_speed_in_unit(row["items_per_min"], total_speed_time_unit);
         }
         data_table.push(row)
     }
@@ -125,11 +122,14 @@ function table_delete_rows() {
             }
         }
     }
-    sort_data();
+    // TODO: sort not needed, but was too lazy to add another function
+    sort_data(data);
     update_displays();
 }
 
-// setup chart
+
+// Chart 
+
 let chart = echarts.init(html_div_chart);
 //https://echarts.apache.org/en/option.html#color
 // const chart_colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
@@ -163,7 +163,7 @@ function chart_update() {
             [new Date(row["timestamp"]), row["items"]]);
         if ("items_per_min" in row) {
             data_echart_speed.push(
-                [new Date(row["timestamp"]), calc_speed_in_unit(row["items_per_min"])]
+                [new Date(row["timestamp"]), calc_speed_in_unit(row["items_per_min"], total_speed_time_unit)]
             )
         }
         if ("items_per_min" in row) {
@@ -253,9 +253,6 @@ function chart_update() {
         }
     };
 
-
-
-
     if (mode == 'speed') {
         chart.setOption({
             series: [series_items, series_speed],
@@ -273,63 +270,9 @@ function chart_update() {
 }
 
 
-// math helpers
-const zeroPad = (num, places) => String(num).padStart(places, '0')
+// update functions
 
-// function linreg_v1(xArray, yArray) {
-// from Lin Reg, see https://www.w3schools.com/ai/ai_regressions.asp
-// bad, since using average instead of least squares
-
-function linreg(x, y) {
-    // from https://oliverjumpertz.com/simple-linear-regression-theory-math-and-implementation-in-javascript/
-    const sumX = x.reduce((prev, curr) => prev + curr, 0);
-    const avgX = sumX / x.length;
-    const xDifferencesToAverage = x.map((value) => avgX - value);
-    const xDifferencesToAverageSquared = xDifferencesToAverage.map(
-        (value) => value ** 2
-    );
-    const SSxx = xDifferencesToAverageSquared.reduce(
-        (prev, curr) => prev + curr,
-        0
-    );
-    const sumY = y.reduce((prev, curr) => prev + curr, 0);
-    const avgY = sumY / y.length;
-    const yDifferencesToAverage = y.map((value) => avgY - value);
-    const xAndYDifferencesMultiplied = xDifferencesToAverage.map(
-        (curr, index) => curr * yDifferencesToAverage[index]
-    );
-    const SSxy = xAndYDifferencesMultiplied.reduce(
-        (prev, curr) => prev + curr,
-        0
-    );
-    const slope = SSxy / SSxx;
-    const intercept = avgY - slope * avgX;
-    return [slope, intercept];
-}
-
-function remaining_seconds_to_readable_time(totalSeconds) {
-    // based https://codingbeautydev.com/blog/javascript-convert-seconds-to-hours-and-minutes/
-    totalSeconds = Math.floor(totalSeconds);
-    if (totalSeconds < 0) {
-        return "";
-    } else if (totalSeconds < 60) {
-        return totalSeconds.toString() + "s";
-    } else if (totalSeconds < 3600) {
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        return minutes.toString() + ":" + zeroPad(seconds, 2) + "min"
-    } else if (totalSeconds < 86400) { //3600*24
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.round((totalSeconds - hours * 3600) / 60);
-        return hours.toString() + ":" + zeroPad(minutes, 2) + "h"
-    } else {
-        const days = Math.floor(totalSeconds / 86400);
-        const hours = Math.round((totalSeconds - days * 86400) / 3600);
-        return days.toString() + "d " + hours.toString() + "h"
-    }
-}
-
-function calc_total_eta_and_speed() {
+function update_total_eta_and_speed() {
     const last_row = data.slice(-1)[0];
     let xArray = [];
     let yArray = [];
@@ -361,11 +304,12 @@ function calc_total_eta_and_speed() {
         html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 1440) / 10) + " Items/d";
     }
     update_remaining_time();
+
     // stop auto-refresh timer
     clearInterval(interval_auto_refresh);
 
     //re-initalize the auto-refresh timer
-    let min_remaining = (total_timestamp_eta - Date.now()) / 1000;
+    const min_remaining = (total_timestamp_eta - Date.now()) / 1000;
     if (min_remaining > 0) {
         let time_sleeptime = 1000;
         if (min_remaining > 60) { // once per min for > 1 hour remaining time
@@ -373,18 +317,6 @@ function calc_total_eta_and_speed() {
         }
         interval_auto_refresh = setInterval(update_remaining_time, time_sleeptime);
     }
-}
-
-function calc_speed_in_unit(items_per_min) {
-    let speed = 0;
-    if (total_speed_time_unit == 'Minute') {
-        speed = Math.abs(Math.round(10 * items_per_min) / 10);
-    } else if (total_speed_time_unit == 'Hour') {
-        speed = Math.abs(Math.round(10 * 60 * items_per_min) / 10);
-    } else if (total_speed_time_unit == 'Day') {
-        speed = Math.abs(Math.round(10 * 1440 * items_per_min) / 10);
-    }
-    return speed;
 }
 
 function update_remaining_time() {
@@ -398,8 +330,7 @@ function update_remaining_time() {
     }
 }
 
-
-function calc_start_runtime_and_pct() {
+function update_start_runtime_and_pct() {
     const ts_first = data[0]["timestamp"];
     const d = new Date(ts_first);
     html_text_start.innerHTML = d.toLocaleString('de-DE');
@@ -419,60 +350,39 @@ function calc_start_runtime_and_pct() {
     html_text_pct.innerHTML = percent + "%";
 }
 
-function calc_row_new_items_per_min_and_eta(row_new, row_last) {
-    // calc items_per_min
-    if (row_new["timestamp"] != row_last["timestamp"]) {
-        row_new["items_per_min"] = 60000 * (row_new["items"] - row_last["items"]) / (row_new["timestamp"] - row_last["timestamp"]);
-    } else {
-        delete row_new["items_per_min"];
-    }
-    // calc eta
-    if ("items_per_min" in row_new && row_new["items_per_min"] != 0) {
-        const ts_eta = Math.round(
-            row_new["timestamp"]
-            + (row_new["remaining"] / row_new["items_per_min"] * 60000)
-        );
-        row_new["eta_str"] = (new Date(ts_eta)).toLocaleString('de-DE');
-        row_new["eta_ts"] = ts_eta;
-    } else {
-        delete row_new["eta_str"];
-        delete row_new["eta_ts"];
+function update_displays() {
+    update_start_runtime_and_pct();
+    table_update();
+    if (data.length >= 2) {
+        update_total_eta_and_speed();
+        chart_update();
     }
 }
 
-function sort_data() {
-    // sorting from https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value
-    // console.log(data);
-    if (data.length > 1) {
-        data.sort((a, b) => a.timestamp - b.timestamp);
-    }
-    // remove items_per_min from new first item
-    if (data.length > 0) {
-        delete data[0]["items_per_min"];
-    }
-    // re-calculate items per minute
-    for (let i = 1; i < data.length; i++) {
-        calc_row_new_items_per_min_and_eta(data[i], data[i - 1])
-    }
-    // console.log(data);
-    window.localStorage.setItem("eta_data", JSON.stringify(data));
-}
 
+// FE EventListener
 
-// FE-triggered functions
 html_input_target.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
         event.preventDefault();
         setTarget();
     }
 });
-
 html_input_items.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
         event.preventDefault();
         add();
     }
 });
+html_input_hist_items.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        add_hist();
+    }
+});
+
+
+// FE-triggered functions
 
 function setTarget() {
     console.log("setTarget()");
@@ -565,6 +475,7 @@ function reset() {
     data = [];
     settings = {};
     total_items_per_min = 0
+    total_speed_time_unit = 'Minute'
     // window.localStorage.setItem("eta_data", JSON.stringify(data));
     window.localStorage.removeItem('eta_data');
     window.localStorage.removeItem('eta_settings');
@@ -613,15 +524,6 @@ function hide_intro() {
     html_text_intro.remove();
 }
 
-function update_displays() {
-    calc_start_runtime_and_pct();
-    table_update();
-    if (data.length >= 2) {
-        calc_total_eta_and_speed();
-        chart_update();
-    }
-}
-
 function add_hist() {
     if (!"target" in settings) {
         alert("set target first");
@@ -649,13 +551,12 @@ function add_hist() {
         "timestamp": d.getTime(),
     }
     data.push(row_new);
-    sort_data();
+    sort_data(data);
     update_displays();
 }
 
+
 // initalize
-// hist_datetime to now
-html_input_hist_datetime.value = (new Date().toISOString().substring(0, 16));
 
 // wait for tableBuilt event and update all data displays afterwards
 table.on("tableBuilt", function () {
@@ -663,7 +564,17 @@ table.on("tableBuilt", function () {
 });
 
 // autorefresh of remaining time
-let interval_auto_refresh = setInterval(update_remaining_time, 1000);
+let interval_auto_refresh;
+// = setInterval(update_remaining_time, 1000);
+// done in calc_total_eta_and_speed()
+
+if (data.length >= 1) {
+    update_total_eta_and_speed();
+}
+
+// hist_datetime to now
+html_input_hist_datetime.value = (new Date().toISOString().substring(0, 16));
+
 
 // Test area
 
