@@ -357,16 +357,27 @@ function calc_total_eta_and_speed() {
         html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 1440) / 10) + " items/day";
     }
     update_remaining_time();
+    // stop auto-refresh timer
+    clearInterval(interval_auto_refresh);
+
+    //re-initalize the auto-refresh timer
+    let min_remaining = (total_timestamp_eta - Date.now()) / 1000;
+    if (min_remaining > 0) {
+        let time_sleeptime = 1000;
+        if (min_remaining > 60) { // once per min for > 1 hour remaining time
+            time_sleeptime = 60000;
+        }
+        interval_auto_refresh = setInterval(update_remaining_time, time_sleeptime);
+    }
 }
 
 function update_remaining_time() {
     let ms_remaining = (total_timestamp_eta - Date.now()); // alternatively use last_row["timestamp"]
     if (ms_remaining < 0) {
         ms_remaining = 0;
-        clearInterval(auto_refresh_timeinterval);
+        // stop timer
+        clearInterval(interval_auto_refresh);
     } else {
-        // re-initalize the refresh timer to 1.0s from now
-        auto_refresh_timeinterval = setInterval(update_remaining_time, 1000);
         html_text_remaining.innerHTML = "<b>" + remaining_seconds_to_readable_time(ms_remaining / 1000); + "</b>";
     }
 }
@@ -637,7 +648,7 @@ table.on("tableBuilt", function () {
 });
 
 // autorefresh of remaining time
-let auto_refresh_timeinterval = setInterval(update_remaining_time, 1000);
+let interval_auto_refresh = setInterval(update_remaining_time, 1000);
 
 // Test area
 
