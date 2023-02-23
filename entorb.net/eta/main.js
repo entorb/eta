@@ -128,7 +128,7 @@ function table_delete_rows() {
 }
 
 
-// Chart 
+// Chart
 
 let chart = echarts.init(html_div_chart);
 //https://echarts.apache.org/en/option.html#color
@@ -309,7 +309,7 @@ function update_total_eta_and_speed() {
     clearInterval(interval_auto_refresh);
 
     //re-initalize the auto-refresh timer
-    const min_remaining = (total_timestamp_eta - Date.now()) / 1000;
+    const min_remaining = (total_timestamp_eta - Date.now()) / 60 / 1000;
     if (min_remaining > 0) {
         let time_sleeptime = 1000;
         if (min_remaining > 60) { // once per min for > 1 hour remaining time
