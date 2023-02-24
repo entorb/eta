@@ -54,7 +54,7 @@ let total_speed_time_unit = "Minute"; // Minute/Hour/Day
   } else {
     data = [];
   }
-  if (data.length == 0) {
+  if (data.length === 0) {
     html_input_items.value = 1;
   } else {
     const last_row = data.slice(-1)[0];
@@ -125,7 +125,7 @@ function table_update() {
 function table_delete_rows() {
   // const selectedRows = table.getSelectedRows();
   const selectedData = table.getSelectedData();
-  if (selectedData.length == data.length) {
+  if (selectedData.length === data.length) {
     reset();
     return;
   }
@@ -133,7 +133,7 @@ function table_delete_rows() {
     const row = selectedData[i];
     const timestamp_to_delete = row["timestamp"];
     for (let j = data.length - 1; j >= 0; --j) {
-      if (data[j]["timestamp"] == timestamp_to_delete) {
+      if (data[j]["timestamp"] === timestamp_to_delete) {
         data.splice(j, 1);
       }
     }
@@ -272,13 +272,13 @@ function chart_update() {
     },
   };
 
-  if (mode == "speed") {
+  if (mode === "speed") {
     chart.setOption({
       series: [series_items, series_speed],
       xAxis: { type: "time" },
       yAxis: [yAxis_items, yAxis2_speed],
     });
-  } else if (mode == "eta") {
+  } else if (mode === "eta") {
     chart.setOption({
       series: [series_items, series_eta],
       xAxis: { type: "time" },
@@ -365,7 +365,7 @@ function update_start_runtime_and_pct() {
   let percent;
   const row_first = data[0];
   const row_last = data.slice(-1)[0];
-  if (settings["target"] == 0) {
+  if (settings["target"] === 0) {
     // remaining is neg for all rows
     percent =
       Math.round(
@@ -430,7 +430,7 @@ function setTarget() {
     alert("Target must be positiv.");
     return; // new target is neg
   }
-  if (target_new == settings["target"]) {
+  if (target_new === settings["target"]) {
     console.log("target unchanged");
     return; // nothing to change
   }
@@ -446,7 +446,7 @@ function setTarget() {
     settings["target"] = target_new;
     window.localStorage.setItem("eta_settings", JSON.stringify(settings));
 
-    if (settings["target"] == 0) {
+    if (settings["target"] === 0) {
       table.hideColumn("remaining");
     } else {
       table.showColumn("remaining");
@@ -481,7 +481,7 @@ function add() {
     const row_last = data.slice(-1)[0];
 
     // in mode=countdown, we only exept decreasing values
-    if (target == 0 && items >= row_last["items"]) {
+    if (target === 0 && items >= row_last["items"]) {
       alert("New entry must be < previous entry in countdown mode.");
       return;
     }
@@ -567,7 +567,7 @@ function add_hist() {
     alert("invalid date / time");
     return;
   }
-  if (html_input_hist_items.value == "") {
+  if (html_input_hist_items.value === "") {
     alert("value missing");
     return;
   }

@@ -32,11 +32,11 @@ function remaining_seconds_to_readable_time(totalSeconds) {
 function calc_speed_in_unit(items_per_min, speed_unit) {
   // unit: per Minute/Hour/Day
   let speed = 0;
-  if (speed_unit == "Minute") {
+  if (speed_unit === "Minute") {
     speed = Math.abs(Math.round(10 * items_per_min) / 10);
-  } else if (speed_unit == "Hour") {
+  } else if (speed_unit === "Hour") {
     speed = Math.abs(Math.round(10 * 60 * items_per_min) / 10);
-  } else if (speed_unit == "Day") {
+  } else if (speed_unit === "Day") {
     speed = Math.abs(Math.round(10 * 1440 * items_per_min) / 10);
   }
   return speed;
