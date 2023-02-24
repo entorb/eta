@@ -1,9 +1,13 @@
+/* eslint-disable camelcase */
+/* eslint-disable require-jsdoc */
+("use strict");
+
 /*
 DONE
 if mode = countdown -> items < last_items
 if mode = target -> items > last_items
 wget script for download libs
-store/move targed to eta_settings
+store/move target to eta_settings
 add modes: decrease to 0 / increase to target
 reset should delete eta_settings as well
 download data and upload data
@@ -21,11 +25,10 @@ TODO/IDEAS
 time since start: dynamically update as well
 */
 
-
 // html elements
 const html_input_items = document.getElementById("input_items");
 const html_input_target = document.getElementById("input_target");
-const html_div_chart = document.getElementById('div_chart');
+const html_div_chart = document.getElementById("div_chart");
 const html_text_eta = document.getElementById("text_eta");
 const html_text_remaining = document.getElementById("text_remaining");
 const html_text_speed = document.getElementById("text_speed");
@@ -34,7 +37,6 @@ const html_text_runtime = document.getElementById("text_runtime");
 const html_text_pct = document.getElementById("text_pct");
 const html_input_hist_datetime = document.getElementById("input_hist_datetime");
 const html_input_hist_items = document.getElementById("input_hist_items");
-const html_btn_hist_add = document.getElementById("btn_hist_add");
 const html_sel_chart_y2 = document.getElementById("sel_chart_y2");
 
 // global variables
@@ -42,525 +44,555 @@ let data;
 let settings;
 let total_items_per_min = 0;
 let total_timestamp_eta = Date.now();
-let total_speed_time_unit = 'Minute'; // Minute/Hour/Day
-
+let total_speed_time_unit = "Minute"; // Minute/Hour/Day
 
 // read browser's local storage for last session data
 {
-    const localStorageData = window.localStorage.getItem("eta_data");
-    if (localStorageData) {
-        data = JSON.parse(localStorageData);
-    } else {
-        data = [];
-    }
-    if (data.length == 0) {
-        html_input_items.value = 1;
-    } else {
-        const last_row = data.slice(-1)[0];
-        html_input_items.value = last_row["items"];
-    }
-    const localStorageSettings = window.localStorage.getItem("eta_settings");
-    if (localStorageSettings) {
-        settings = JSON.parse(localStorageSettings);
-        html_input_target.value = settings["target"];
-    } else {
-        settings = {};
-        html_input_target.value = 0;
-    }
+  const localStorageData = window.localStorage.getItem("eta_data");
+  if (localStorageData) {
+    data = JSON.parse(localStorageData);
+  } else {
+    data = [];
+  }
+  if (data.length == 0) {
+    html_input_items.value = 1;
+  } else {
+    const last_row = data.slice(-1)[0];
+    html_input_items.value = last_row["items"];
+  }
+  const localStorageSettings = window.localStorage.getItem("eta_settings");
+  if (localStorageSettings) {
+    settings = JSON.parse(localStorageSettings);
+    html_input_target.value = settings["target"];
+  } else {
+    settings = {};
+    html_input_target.value = 0;
+  }
 }
-
 
 // Table
 
-let table = new Tabulator("#div_table", {
-    height: "100%",
-    // data: data,
-    layout: "fitDataStretch", //fit columns to width of table (optional)
-    selectable: true,
-    columns: [
-        { title: "Date", field: "date_str", sorter: "datetime", headerSort: false, hozAlign: "center" }, // datetime sorting requires luxon.js library
-        { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
-        { title: "Remaining", field: "remaining", headerSort: false, hozAlign: "center" },
-        { title: "Speed", field: "speed", headerSort: false, hozAlign: "center" },
-        { title: "ETA", field: "eta_str", headerSort: false, hozAlign: "left" },
-    ],
+const table = new Tabulator("#div_table", {
+  height: "100%",
+  // data: data,
+  layout: "fitDataStretch", // fit columns to width of table (optional)
+  selectable: true,
+  columns: [
+    {
+      title: "Date",
+      field: "date_str",
+      sorter: "datetime",
+      headerSort: false,
+      hozAlign: "center",
+    }, // datetime sorting requires luxon.js library
+    { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
+    {
+      title: "Remaining",
+      field: "remaining",
+      headerSort: false,
+      hozAlign: "center",
+    },
+    { title: "Speed", field: "speed", headerSort: false, hozAlign: "center" },
+    { title: "ETA", field: "eta_str", headerSort: false, hozAlign: "left" },
+  ],
 });
 
 function table_update() {
-    // IDEA: second function for just adding a row instead of recreating the table each time?
-    let data_table = [];
-    // BUG: this is only updated when the second time called
-    table.updateColumnDefinition("speed", { title: "Items/" + total_speed_time_unit })
+  // IDEA: second function for just adding a row instead of recreating the table each time?
+  const data_table = [];
+  // BUG: this is only updated when the second time called
+  table.updateColumnDefinition("speed", {
+    title: "Items/" + total_speed_time_unit,
+  });
 
-    for (let i = 0; i < data.length; i++) {
-        // bad: const row = data[i];
-        // clone / copy the origial row
-        // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
-        const row = Object.assign({}, data[i]);
-        row["remaining"] = Math.abs(row["remaining"]);
-        if ("items_per_min" in row) {
-            row["speed"] = calc_speed_in_unit(row["items_per_min"], total_speed_time_unit);
-        }
-        data_table.push(row)
+  for (let i = 0; i < data.length; i++) {
+    // bad: const row = data[i];
+    // clone / copy the origial row
+    // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
+    const row = Object.assign({}, data[i]);
+    row["remaining"] = Math.abs(row["remaining"]);
+    if ("items_per_min" in row) {
+      row["speed"] = calc_speed_in_unit(
+        row["items_per_min"],
+        total_speed_time_unit
+      );
     }
-    table.setData(data_table);
+    data_table.push(row);
+  }
+  table.setData(data_table);
 }
 
 function table_delete_rows() {
-    // const selectedRows = table.getSelectedRows();
-    const selectedData = table.getSelectedData();
-    if (selectedData.length == data.length) {
-        reset();
-        return;
+  // const selectedRows = table.getSelectedRows();
+  const selectedData = table.getSelectedData();
+  if (selectedData.length == data.length) {
+    reset();
+    return;
+  }
+  for (let i = 0; i < selectedData.length; i++) {
+    const row = selectedData[i];
+    const timestamp_to_delete = row["timestamp"];
+    for (let j = data.length - 1; j >= 0; --j) {
+      if (data[j]["timestamp"] == timestamp_to_delete) {
+        data.splice(j, 1);
+      }
     }
-    for (let i = 0; i < selectedData.length; i++) {
-        const row = selectedData[i];
-        const timestamp_to_delete = row["timestamp"];
-        for (let j = data.length - 1; j >= 0; --j) {
-            if (data[j]["timestamp"] == timestamp_to_delete) {
-                data.splice(j, 1);
-            }
-        }
-    }
-    // TODO: sort not needed, but was too lazy to add another function
-    sort_data(data);
-    update_displays();
+  }
+  // TODO: sort not needed, but was too lazy to add another function
+  sort_data(data);
+  update_displays();
 }
-
 
 // Chart
 
-let chart = echarts.init(html_div_chart);
-//https://echarts.apache.org/en/option.html#color
+const chart = echarts.init(html_div_chart);
+// https://echarts.apache.org/en/option.html#color
 // const chart_colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
-const chart_colors = ['#3ba272', '#5470c6', '#91cc75',];
-chart.setOption(
-    {
-        // title: { text: 'Items per Minute' },
-        tooltip: {},
-        legend: {},
-        grid: {
-            // define margins
-            containLabel: false,
-            left: 50,
-            bottom: 20,
-            top: 30,
-            right: 150,
-        },
-    },
-);
+const chart_colors = ["#3ba272", "#5470c6", "#91cc75"];
+chart.setOption({
+  // title: { text: 'Items per Minute' },
+  tooltip: {},
+  legend: {},
+  grid: {
+    // define margins
+    containLabel: false,
+    left: 50,
+    bottom: 20,
+    top: 30,
+    right: 150,
+  },
+});
 
 function chart_update() {
-    let data_echart_items = [];
-    let data_echart_speed = [];
-    let data_echart_eta = [];
-    mode = html_sel_chart_y2.value;
+  const data_echart_items = [];
+  const data_echart_speed = [];
+  const data_echart_eta = [];
+  const mode = html_sel_chart_y2.value;
 
-    for (let i = 0; i < data.length; i++) {
-        // clone, see update_table
-        const row = Object.assign({}, data[i]);
-        data_echart_items.push(
-            [new Date(row["timestamp"]), row["items"]]);
-        if ("items_per_min" in row) {
-            data_echart_speed.push(
-                [new Date(row["timestamp"]), calc_speed_in_unit(row["items_per_min"], total_speed_time_unit)]
-            )
-        }
-        if ("items_per_min" in row) {
-            data_echart_eta.push(
-                [new Date(row["timestamp"]), new Date(row["eta_ts"])]
-            )
-        }
+  for (let i = 0; i < data.length; i++) {
+    // clone, see update_table
+    const row = Object.assign({}, data[i]);
+    data_echart_items.push([new Date(row["timestamp"]), row["items"]]);
+    if ("items_per_min" in row) {
+      data_echart_speed.push([
+        new Date(row["timestamp"]),
+        calc_speed_in_unit(row["items_per_min"], total_speed_time_unit),
+      ]);
     }
-
-    const yAxis_items = {
-        name: 'Items',
-        position: 'left',
-        type: 'value',
-        nameTextStyle: { color: chart_colors[0] },
-        axisLabel: {
-            textStyle: {
-                color: chart_colors[0]
-            }
-        }
+    if ("items_per_min" in row) {
+      data_echart_eta.push([
+        new Date(row["timestamp"]),
+        new Date(row["eta_ts"]),
+      ]);
     }
+  }
 
-    const yAxis2_common = {
-        position: 'right',
-        nameTextStyle: { color: chart_colors[1] },
-        axisLabel: { textStyle: { color: chart_colors[1] } },
-        splitLine: { show: false }, // no grid line
-    };
+  const yAxis_items = {
+    name: "Items",
+    position: "left",
+    type: "value",
+    nameTextStyle: { color: chart_colors[0] },
+    axisLabel: {
+      textStyle: {
+        color: chart_colors[0],
+      },
+    },
+  };
 
-    const yAxis2_speed = {
-        ...yAxis2_common, ...{
-            name: "Items/" + total_speed_time_unit,
-            type: 'value',
-        }
-    }
+  const yAxis2_common = {
+    position: "right",
+    nameTextStyle: { color: chart_colors[1] },
+    axisLabel: { textStyle: { color: chart_colors[1] } },
+    splitLine: { show: false }, // no grid line
+  };
 
-    const yAxis2_eta = {
-        ...yAxis2_common, ...{
-            name: 'ETA',
-            type: 'time',
-        }
-    }
+  const yAxis2_speed = {
+    ...yAxis2_common,
+    ...{
+      name: "Items/" + total_speed_time_unit,
+      type: "value",
+    },
+  };
 
-    const series_common = {
-        type: 'line',
-        smooth: true,
-        symbolSize: 10,
+  const yAxis2_eta = {
+    ...yAxis2_common,
+    ...{
+      name: "ETA",
+      type: "time",
+    },
+  };
+
+  const series_common = {
+    type: "line",
+    smooth: true,
+    symbolSize: 10,
+    silent: true,
+    animation: false,
+  };
+
+  const series_items = {
+    ...series_common,
+    ...{
+      yAxisIndex: 0,
+      data: data_echart_items,
+      color: chart_colors[0],
+      areaStyle: { opacity: 0.5 },
+    },
+  };
+
+  const series_speed = {
+    ...series_common,
+    ...{
+      yAxisIndex: 1,
+      color: chart_colors[1],
+      data: data_echart_speed,
+      markLine: {
+        symbol: "none",
+        label: { show: false },
         silent: true,
-        animation: false,
-    }
+        animation: true,
+        data: [{ yAxis: total_items_per_min }],
+      },
+    },
+  };
 
-    const series_items = {
-        ...series_common, ...{
-            yAxisIndex: 0,
-            data: data_echart_items,
-            color: chart_colors[0],
-            areaStyle: { opacity: 0.5 }
-        }
-    };
+  const series_eta = {
+    ...series_common,
+    ...{
+      yAxisIndex: 1,
+      color: chart_colors[1],
+      data: data_echart_eta,
+      markLine: {
+        symbol: "none",
+        label: { show: false },
+        silent: true,
+        animation: true,
+        data: [{ yAxis: new Date(total_timestamp_eta) }],
+      },
+    },
+  };
 
-    const series_speed = {
-        ...series_common, ...{
-            yAxisIndex: 1,
-            color: chart_colors[1],
-            data: data_echart_speed,
-            markLine: {
-                symbol: 'none',
-                label: { show: false },
-                silent: true,
-                animation: true,
-                data: [{ yAxis: total_items_per_min, },]
-            }
-        }
-    };
-
-    const series_eta = {
-        ...series_common, ...{
-            yAxisIndex: 1,
-            color: chart_colors[1],
-            data: data_echart_eta,
-            markLine: {
-                symbol: 'none',
-                label: { show: false },
-                silent: true,
-                animation: true,
-                data: [{ yAxis: new Date(total_timestamp_eta), },]
-            }
-        }
-    };
-
-    if (mode == 'speed') {
-        chart.setOption({
-            series: [series_items, series_speed],
-            xAxis: { type: 'time', },
-            yAxis: [yAxis_items, yAxis2_speed]
-        });
-    }
-    else if (mode == 'eta') {
-        chart.setOption({
-            series: [series_items, series_eta],
-            xAxis: { type: 'time', },
-            yAxis: [yAxis_items, yAxis2_eta],
-        });
-    }
+  if (mode == "speed") {
+    chart.setOption({
+      series: [series_items, series_speed],
+      xAxis: { type: "time" },
+      yAxis: [yAxis_items, yAxis2_speed],
+    });
+  } else if (mode == "eta") {
+    chart.setOption({
+      series: [series_items, series_eta],
+      xAxis: { type: "time" },
+      yAxis: [yAxis_items, yAxis2_eta],
+    });
+  }
 }
-
 
 // update functions
 
 function update_total_eta_and_speed() {
-    const last_row = data.slice(-1)[0];
-    let xArray = [];
-    let yArray = [];
-    for (let i = 0; i < data.length; i++) {
-        const row = data[i];
-        xArray.push(row["timestamp"]);
-        yArray.push(row["remaining"]);
+  const last_row = data.slice(-1)[0];
+  const xArray = [];
+  const yArray = [];
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    xArray.push(row["timestamp"]);
+    yArray.push(row["remaining"]);
+  }
+  const [slope, intercept] = linreg(xArray, yArray);
+  // slope = speed in items/ms
+  // target > 0: slope of remaining items is negative
+  // target = 0: slope of remaining items is positive (but remaining items is neg as well)
+  // last_row["remaining"] / slope is positive for both modes
+
+  total_timestamp_eta = Math.round(
+    last_row["timestamp"] + (-1 * last_row["remaining"]) / slope
+  );
+  const d = new Date(total_timestamp_eta);
+  html_text_eta.innerHTML = "<b>" + d.toLocaleString("de-DE") + "</b>";
+
+  // ensure total_items_per_min to be positive
+  total_items_per_min = Math.abs(slope) * 60000;
+  if (total_items_per_min > 0.5) {
+    total_speed_time_unit = "Minute";
+    html_text_speed.innerHTML =
+      Math.round(10 * total_items_per_min) / 10 + " Items/min";
+  } else if (total_items_per_min * 60 > 0.5) {
+    total_speed_time_unit = "Hour";
+    html_text_speed.innerHTML =
+      Math.round(10 * total_items_per_min * 60) / 10 + " Items/h";
+  } else {
+    total_speed_time_unit = "Day";
+    html_text_speed.innerHTML =
+      Math.round(10 * total_items_per_min * 1440) / 10 + " Items/d";
+  }
+  update_remaining_time();
+
+  // stop auto-refresh timer
+  clearInterval(interval_auto_refresh);
+
+  // re-initalize the auto-refresh timer
+  const min_remaining = (total_timestamp_eta - Date.now()) / 60 / 1000;
+  if (min_remaining > 0) {
+    let time_sleeptime = 1000;
+    if (min_remaining > 60) {
+      // once per min for > 1 hour remaining time
+      time_sleeptime = 60000;
     }
-    const [slope, intercept] = linreg(xArray, yArray);
-    // slope = speed in items/ms
-    // target > 0: slope of remaining items is negative
-    // target = 0: slope of remaining items is positive (but remaining items is neg as well)
-    // last_row["remaining"] / slope is positive for both modes
-
-    total_timestamp_eta = Math.round(last_row["timestamp"] + (-1 * last_row["remaining"] / slope));
-    const d = new Date(total_timestamp_eta);
-    html_text_eta.innerHTML = "<b>" + d.toLocaleString('de-DE') + "</b>";
-
-    // ensure total_items_per_min to be positive
-    total_items_per_min = Math.abs(slope) * 60000;
-    if (total_items_per_min > 0.5) {
-        total_speed_time_unit = 'Minute';
-        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min) / 10) + " Items/min";
-    } else if (total_items_per_min * 60 > 0.5) {
-        total_speed_time_unit = 'Hour';
-        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 60) / 10) + " Items/h";
-    } else {
-        total_speed_time_unit = 'Day';
-        html_text_speed.innerHTML = (Math.round(10 * total_items_per_min * 1440) / 10) + " Items/d";
-    }
-    update_remaining_time();
-
-    // stop auto-refresh timer
-    clearInterval(interval_auto_refresh);
-
-    //re-initalize the auto-refresh timer
-    const min_remaining = (total_timestamp_eta - Date.now()) / 60 / 1000;
-    if (min_remaining > 0) {
-        let time_sleeptime = 1000;
-        if (min_remaining > 60) { // once per min for > 1 hour remaining time
-            time_sleeptime = 60000;
-        }
-        interval_auto_refresh = setInterval(update_remaining_time, time_sleeptime);
-    }
+    interval_auto_refresh = setInterval(update_remaining_time, time_sleeptime);
+  }
 }
 
 function update_remaining_time() {
-    let ms_remaining = (total_timestamp_eta - Date.now()); // alternatively use last_row["timestamp"]
-    if (ms_remaining < 0) {
-        ms_remaining = 0;
-        // stop timer
-        clearInterval(interval_auto_refresh);
-    } else {
-        html_text_remaining.innerHTML = "<b>" + remaining_seconds_to_readable_time(ms_remaining / 1000); + "</b>";
-    }
+  let ms_remaining = total_timestamp_eta - Date.now(); // alternatively use last_row["timestamp"]
+  if (ms_remaining < 0) {
+    ms_remaining = 0;
+    // stop timer
+    clearInterval(interval_auto_refresh);
+  } else {
+    html_text_remaining.innerHTML =
+      "<b>" + remaining_seconds_to_readable_time(ms_remaining / 1000) + "</b>";
+  }
 }
 
 function update_start_runtime_and_pct() {
-    const ts_first = data[0]["timestamp"];
-    const d = new Date(ts_first);
-    html_text_start.innerHTML = d.toLocaleString('de-DE');
-    html_text_runtime.innerHTML = remaining_seconds_to_readable_time((Date.now() - ts_first) / 1000);
+  const ts_first = data[0]["timestamp"];
+  const d = new Date(ts_first);
+  html_text_start.innerHTML = d.toLocaleString("de-DE");
+  html_text_runtime.innerHTML = remaining_seconds_to_readable_time(
+    (Date.now() - ts_first) / 1000
+  );
 
-    let percent;
-    const row_first = data[0];
-    const row_last = data.slice(-1)[0];
-    if (settings["target"] == 0) {
-        // remaining is neg for all rows
-        percent = (Math.round(10 * (100 - 100 * row_last["remaining"] / row_first["remaining"]))) / 10;
-    }
-    else {
-        // remaining is pos for all rows
-        percent = (Math.round(10 * (100 * row_last["items"] / (row_first["items"] + row_first["remaining"])))) / 10;
-    }
-    html_text_pct.innerHTML = percent + "%";
+  let percent;
+  const row_first = data[0];
+  const row_last = data.slice(-1)[0];
+  if (settings["target"] == 0) {
+    // remaining is neg for all rows
+    percent =
+      Math.round(
+        10 * (100 - (100 * row_last["remaining"]) / row_first["remaining"])
+      ) / 10;
+  } else {
+    // remaining is pos for all rows
+    percent =
+      Math.round(
+        10 *
+          ((100 * row_last["items"]) /
+            (row_first["items"] + row_first["remaining"]))
+      ) / 10;
+  }
+  html_text_pct.innerHTML = percent + "%";
 }
 
 function update_displays() {
-    update_start_runtime_and_pct();
-    table_update();
-    if (data.length >= 2) {
-        update_total_eta_and_speed();
-        chart_update();
-    }
+  update_start_runtime_and_pct();
+  table_update();
+  if (data.length >= 2) {
+    update_total_eta_and_speed();
+    chart_update();
+  }
 }
-
 
 // FE EventListener
 
 html_input_target.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        setTarget();
-    }
+  if (event.key === "Enter") {
+    event.preventDefault();
+    setTarget();
+  }
 });
 html_input_items.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        add();
-    }
+  if (event.key === "Enter") {
+    event.preventDefault();
+    add();
+  }
 });
 html_input_hist_items.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        add_hist();
-    }
+  if (event.key === "Enter") {
+    event.preventDefault();
+    add_hist();
+  }
 });
-
 
 // FE-triggered functions
 
 function setTarget() {
-    console.log("setTarget()");
-    let target_new;
-    if (!html_input_target.value) {
-        target_new = 0;
-        html_input_target.value = 0;
+  console.log("setTarget()");
+  let target_new;
+  if (!html_input_target.value) {
+    target_new = 0;
+    html_input_target.value = 0;
+  } else {
+    target_new = Number(html_input_target.value);
+  }
+
+  if (target_new < 0) {
+    console.log("new target negativ");
+    alert("Target must be positiv.");
+    return; // new target is neg
+  }
+  if (target_new == settings["target"]) {
+    console.log("target unchanged");
+    return; // nothing to change
+  }
+  if (data.length > 0) {
+    console.log("data already present");
+    alert(
+      "In order to change the target, delete the data first, see button below."
+    );
+    html_input_target.value = settings["target"];
+    return;
+  } else {
+    console.log("target changed to " + target_new);
+    settings["target"] = target_new;
+    window.localStorage.setItem("eta_settings", JSON.stringify(settings));
+
+    if (settings["target"] == 0) {
+      table.hideColumn("remaining");
     } else {
-        target_new = Number(html_input_target.value);
+      table.showColumn("remaining");
     }
-
-    if (target_new < 0) {
-        console.log("new target negativ");
-        alert("Target must be positiv.");
-        return; // new target is neg
-    }
-    if (target_new == settings["target"]) {
-        console.log("target unchanged");
-        return; // nothing to change
-    }
-    if (data.length > 0) {
-        console.log("data already present");
-        alert("In order to change the target, delete the data first, see button below.");
-        html_input_target.value = settings["target"];
-        return;
-    }
-    else {
-        console.log("target changed to " + target_new);
-        settings["target"] = target_new;
-        window.localStorage.setItem("eta_settings", JSON.stringify(settings));
-
-        if (settings["target"] == 0) {
-            table.hideColumn("remaining");
-        } else {
-            table.showColumn("remaining");
-        }
-        // console.log(settings);
-    }
+    // console.log(settings);
+  }
 }
 
 function add() {
-    if ("target" in settings) {
-        // console.log("target: " + settings);
-    } else {
-        console.log("setting target prio to add items value");
-        setTarget();
-    }
-    if (!html_input_items.value) {
-        return;
-    }
-    const d = new Date();
-    const items = Number(html_input_items.value);
-    const target = settings["target"];
-    const timestamp = d.getTime();
-    let row_new = {
-        // "datetime": d,
-        "items": items,
-        "remaining": target - items,
-        "date_str": d.toLocaleString('de-DE'),
-        "timestamp": timestamp,
-    }
-    // data already present before we add the new row
-    if (data.length >= 1) {
-        const row_last = data.slice(-1)[0];
+  if ("target" in settings) {
+    // console.log("target: " + settings);
+  } else {
+    console.log("setting target prio to add items value");
+    setTarget();
+  }
+  if (!html_input_items.value) {
+    return;
+  }
+  const d = new Date();
+  const items = Number(html_input_items.value);
+  const target = settings["target"];
+  const timestamp = d.getTime();
+  const row_new = {
+    // "datetime": d,
+    items: items,
+    remaining: target - items,
+    date_str: d.toLocaleString("de-DE"),
+    timestamp: timestamp,
+  };
+  // data already present before we add the new row
+  if (data.length >= 1) {
+    const row_last = data.slice(-1)[0];
 
-        // in mode=countdown, we only exept decreasing values
-        if (target == 0 && items >= row_last["items"]) {
-            alert("New entry must be < previous entry in countdown mode.");
-            return;
-        }
-        // in mode=countup, we only exept increasing values
-        if (target > 0 && items <= row_last["items"]) {
-            alert("New entry must be > previous entry in countup mode.");
-            return;
-        }
-        // in mode=countup, we do not exept values > target
-        if (target > 0 && items > target) {
-            alert("New entry must not exceed target.");
-            return;
-        }
-        calc_row_new_items_per_min_and_eta(row_new, row_last);
+    // in mode=countdown, we only exept decreasing values
+    if (target == 0 && items >= row_last["items"]) {
+      alert("New entry must be < previous entry in countdown mode.");
+      return;
     }
+    // in mode=countup, we only exept increasing values
+    if (target > 0 && items <= row_last["items"]) {
+      alert("New entry must be > previous entry in countup mode.");
+      return;
+    }
+    // in mode=countup, we do not exept values > target
+    if (target > 0 && items > target) {
+      alert("New entry must not exceed target.");
+      return;
+    }
+    calc_row_new_items_per_min_and_eta(row_new, row_last);
+  }
 
-    data.push(row_new);
-    window.localStorage.setItem("eta_data", JSON.stringify(data));
-    update_displays();
+  data.push(row_new);
+  window.localStorage.setItem("eta_data", JSON.stringify(data));
+  update_displays();
 }
 
 function reset() {
-    data = [];
-    settings = {};
-    total_items_per_min = 0
-    total_speed_time_unit = 'Minute'
-    // window.localStorage.setItem("eta_data", JSON.stringify(data));
-    window.localStorage.removeItem('eta_data');
-    window.localStorage.removeItem('eta_settings');
-    html_text_eta.innerHTML = "&nbsp;";
-    html_text_remaining.innerHTML = "&nbsp;";
-    html_text_start.innerHTML = "&nbsp;";
-    html_text_runtime.innerHTML = "&nbsp;";
-    html_text_pct.innerHTML = "&nbsp;";
-    html_text_speed.innerHTML = "&nbsp;";
-    table_update();
-    chart_update();
+  data = [];
+  settings = {};
+  total_items_per_min = 0;
+  total_speed_time_unit = "Minute";
+  // window.localStorage.setItem("eta_data", JSON.stringify(data));
+  window.localStorage.removeItem("eta_data");
+  window.localStorage.removeItem("eta_settings");
+  html_text_eta.innerHTML = "&nbsp;";
+  html_text_remaining.innerHTML = "&nbsp;";
+  html_text_start.innerHTML = "&nbsp;";
+  html_text_runtime.innerHTML = "&nbsp;";
+  html_text_pct.innerHTML = "&nbsp;";
+  html_text_speed.innerHTML = "&nbsp;";
+  table_update();
+  chart_update();
 }
 
 function download_data() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify([settings, data]));
-    let html_dl_anchor = document.getElementById("downloadAnchor");
-    html_dl_anchor.setAttribute("href", dataStr);
-    html_dl_anchor.setAttribute("download", "eta.json");
-    html_dl_anchor.click();
+  const dataStr =
+    "data:text/json;charset=utf-8," +
+    encodeURIComponent(JSON.stringify([settings, data]));
+  const html_dl_anchor = document.getElementById("downloadAnchor");
+  html_dl_anchor.setAttribute("href", dataStr);
+  html_dl_anchor.setAttribute("download", "eta.json");
+  html_dl_anchor.click();
 }
 
 function upload_data(input) {
-    // from https://javascript.info/file
-    let file = input.files[0];
-    let reader = new FileReader();
-    reader.readAsText(file);
-    reader.onload = function () {
-        const uploaded_data = JSON.parse(reader.result);
-        // console.log(uploaded_data);
-        settings = uploaded_data[0];
-        data = uploaded_data[1];
-        window.localStorage.setItem("eta_settings", JSON.stringify(settings));
-        window.localStorage.setItem("eta_data", JSON.stringify(data));
-        html_input_target.value = settings["target"];
-        update_displays();
-    };
-    reader.onerror = function () {
-        console.log(reader.error);
-    };
-
+  // from https://javascript.info/file
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.readAsText(file);
+  reader.onload = function () {
+    const uploaded_data = JSON.parse(reader.result);
+    // console.log(uploaded_data);
+    settings = uploaded_data[0];
+    data = uploaded_data[1];
+    window.localStorage.setItem("eta_settings", JSON.stringify(settings));
+    window.localStorage.setItem("eta_data", JSON.stringify(data));
+    html_input_target.value = settings["target"];
+    update_displays();
+  };
+  reader.onerror = function () {
+    console.log(reader.error);
+  };
 }
 
 function hide_intro() {
-    // from https://stackoverflow.com/questions/1070760/javascript-href-vs-onclick-for-callback-function-on-hyperlink
-    const html_text_intro = document.getElementById('text_intro');
-    html_text_intro.remove();
+  // from https://stackoverflow.com/questions/1070760/javascript-href-vs-onclick-for-callback-function-on-hyperlink
+  const html_text_intro = document.getElementById("text_intro");
+  html_text_intro.remove();
 }
 
 function add_hist() {
-    if (!"target" in settings) {
-        alert("set target first");
-        return;
-    }
-    const datetime_str = html_input_hist_datetime.value;
-    if (!datetime_str) {
-        alert("invalid date / time");
-        return;
-    }
-    if (html_input_hist_items.value == "") {
-        alert("value missing");
-        return;
-    }
-    const items = Number(html_input_hist_items.value);
+  if (!("target" in settings)) {
+    alert("set target first");
+    return;
+  }
+  const datetime_str = html_input_hist_datetime.value;
+  if (!datetime_str) {
+    alert("invalid date / time");
+    return;
+  }
+  if (html_input_hist_items.value == "") {
+    alert("value missing");
+    return;
+  }
+  const items = Number(html_input_hist_items.value);
 
-    const timestamp = Date.parse(datetime_str);
-    const d = new Date(timestamp);
+  const timestamp = Date.parse(datetime_str);
+  const d = new Date(timestamp);
 
-    let row_new = {
-        // "datetime": d,
-        "items": items,
-        "remaining": settings["target"] - items,
-        "date_str": d.toLocaleString('de-DE'),
-        "timestamp": d.getTime(),
-    }
-    data.push(row_new);
-    sort_data(data);
-    update_displays();
+  const row_new = {
+    // "datetime": d,
+    items: items,
+    remaining: settings["target"] - items,
+    date_str: d.toLocaleString("de-DE"),
+    timestamp: d.getTime(),
+  };
+  data.push(row_new);
+  sort_data(data);
+  update_displays();
 }
-
 
 // initalize
 
 // wait for tableBuilt event and update all data displays afterwards
 table.on("tableBuilt", function () {
-    update_displays();
+  update_displays();
 });
 
 // autorefresh of remaining time
@@ -569,18 +601,14 @@ let interval_auto_refresh;
 // done in calc_total_eta_and_speed()
 
 if (data.length >= 1) {
-    update_total_eta_and_speed();
+  update_total_eta_and_speed();
 }
 
 // hist_datetime to now
-html_input_hist_datetime.value = (new Date().toISOString().substring(0, 16));
-
+html_input_hist_datetime.value = new Date().toISOString().substring(0, 16);
 
 // Test area
 
-
-
 // console.log(
-    //     Date()
+//     Date()
 // );
-
