@@ -21,11 +21,12 @@ remaining time: update dynamically every second
 speed unit auto: per min / per hour / per day
 refactoring: extract helper functions separate file
 apply ESLint and Prettier
+use jest for unit tests
 download CSV data
+runtime: dynamically update as well
 
 TODO/IDEAS
-?time since start: dynamically update as well?
-use jest for unit tests
+100% test coverage for helper.js
 */
 
 // html elements
@@ -331,7 +332,7 @@ function update_total_eta_and_speed() {
     html_text_speed.innerHTML =
       Math.round(10 * total_items_per_min * 1440) / 10 + " Items/d";
   }
-  update_remaining_time();
+  update_timers();
 
   // stop auto-refresh timer
   clearInterval(interval_auto_refresh);
@@ -344,32 +345,30 @@ function update_total_eta_and_speed() {
       // once per min for > 1 hour remaining time
       time_sleeptime = 60000;
     }
-    interval_auto_refresh = setInterval(update_remaining_time, time_sleeptime);
+    interval_auto_refresh = setInterval(update_timers, time_sleeptime);
   }
 }
 
-function update_remaining_time() {
-  let ms_remaining = total_timestamp_eta - Date.now(); // alternatively use last_row["timestamp"]
+function update_timers() {
+  if (data.length === 0) {
+    return;
+  }
+  const ms_passed = Date.now() - data[0]["timestamp"];
+  let ms_remaining = total_timestamp_eta - Date.now();
   if (ms_remaining < 0) {
     ms_remaining = 0;
     // stop timer
     clearInterval(interval_auto_refresh);
-  } else {
-    html_text_remaining.innerHTML =
-      "<b>" + remaining_seconds_to_readable_time(ms_remaining / 1000) + "</b>";
   }
+  html_text_remaining.innerHTML =
+    "<b>" + rel_seconds_to_readable_time(ms_remaining / 1000) + "</b>";
+  html_text_runtime.innerHTML = rel_seconds_to_readable_time(ms_passed / 1000);
 }
 
-function update_start_runtime_and_pct() {
-  if (data.length === 0) {
-    return;
-  }
+function update_start_and_pct() {
   const ts_first = data[0]["timestamp"];
   const d = new Date(ts_first);
   html_text_start.innerHTML = d.toLocaleString("de-DE");
-  html_text_runtime.innerHTML = remaining_seconds_to_readable_time(
-    (Date.now() - ts_first) / 1000
-  );
 
   let percent;
   const row_first = data[0];
@@ -393,7 +392,7 @@ function update_start_runtime_and_pct() {
 }
 
 function update_displays() {
-  update_start_runtime_and_pct();
+  update_start_and_pct();
   table_update();
   if (data.length >= 2) {
     update_total_eta_and_speed();

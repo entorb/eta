@@ -6,7 +6,7 @@
 
 const zeroPad = (num, places) => String(num).padStart(places, "0");
 
-function remaining_seconds_to_readable_time(totalSeconds) {
+function rel_seconds_to_readable_time(totalSeconds) {
   // based https://codingbeautydev.com/blog/javascript-convert-seconds-to-hours-and-minutes/
   totalSeconds = Math.floor(totalSeconds);
   if (totalSeconds < 0) {
@@ -122,7 +122,7 @@ function sort_data(data) {
 var module = module || {};
 module.exports = {
   zeroPad,
-  remaining_seconds_to_readable_time,
+  remaining_seconds_to_readable_time: rel_seconds_to_readable_time,
   calc_speed_in_unit,
   linreg,
   calc_row_new_items_per_min_and_eta,

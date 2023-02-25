@@ -15,25 +15,25 @@ npm test
 // import remaining_seconds_to_readable_time from "./helper.js";
 // throws SyntaxError: Cannot use import statement outside a module
 // so using require instead
-const { remaining_seconds_to_readable_time } = require("./helper");
+const { rel_seconds_to_readable_time } = require("./helper");
 
 describe("Testing remaining_seconds_to_readable_time()", () => {
   test("1s", () => {
-    expect(remaining_seconds_to_readable_time(1)).toEqual("1s");
+    expect(rel_seconds_to_readable_time(1)).toEqual("1s");
   });
   test("100s", () => {
-    expect(remaining_seconds_to_readable_time(100)).toEqual("1:40min");
+    expect(rel_seconds_to_readable_time(100)).toEqual("1:40min");
   });
   test("0s", () => {
-    expect(remaining_seconds_to_readable_time(0)).toEqual("0s");
+    expect(rel_seconds_to_readable_time(0)).toEqual("0s");
   });
   test("-1s", () => {
-    expect(remaining_seconds_to_readable_time(-1)).toEqual("0s");
+    expect(rel_seconds_to_readable_time(-1)).toEqual("0s");
   });
   test(">1h", () => {
-    expect(remaining_seconds_to_readable_time(4000)).toEqual("1:07h");
+    expect(rel_seconds_to_readable_time(4000)).toEqual("1:07h");
   });
   test(">1d", () => {
-    expect(remaining_seconds_to_readable_time(100000)).toEqual("1d 4h");
+    expect(rel_seconds_to_readable_time(100000)).toEqual("1d 4h");
   });
 });
