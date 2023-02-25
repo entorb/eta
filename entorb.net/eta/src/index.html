@@ -81,13 +81,13 @@ TODOs
     <table>
         <tr>
             <td>Target</td>
-            <td><input id="input_target" type="number" min="0"></td>
+            <td><input id="input_target" type="text" inputmode="numeric" pattern="[0-9]*"></td>
             <td></td>
             <!-- <button id="btn_setTarget" style="width:4em" onclick="setTarget()">Set</button> -->
         </tr>
         <tr>
             <td>Items</td>
-            <td><input id="input_items" type="number" min="0"></td>
+            <td><input id="input_items" type="text" inputmode="numeric" pattern="[0-9]*"></td>
             <td><button id="btn_add" style="width:4em" onclick="add()">Add</button></td>
         </tr>
     </table>
@@ -127,7 +127,7 @@ TODOs
 
     <h3>Add historical data</h3>
     <input id="input_hist_datetime" type="datetime-local">
-    <input id="input_hist_items" type="number" min="0">
+    <input id="input_hist_items" type="text" inputmode="numeric" pattern="[0-9]*">
     <button id="btn_hist_add" style="width:4em" onclick="add_hist()">Add</button>
 
     <h3>Export and Import</h3>

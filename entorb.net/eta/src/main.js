@@ -61,7 +61,7 @@ let total_speed_time_unit = "Minute"; // Minute/Hour/Day
     data = [];
   }
   if (data.length === 0) {
-    html_input_items.value = 1;
+    // keep input empty
   } else {
     const last_row = data.slice(-1)[0];
     html_input_items.value = last_row["items"];
@@ -72,7 +72,6 @@ let total_speed_time_unit = "Minute"; // Minute/Hour/Day
     html_input_target.value = settings["target"];
   } else {
     settings = {};
-    html_input_target.value = 0;
   }
 }
 
@@ -444,7 +443,7 @@ function setTarget() {
     target_new = 0;
     html_input_target.value = 0;
   } else {
-    target_new = Number(html_input_target.value);
+    target_new = Number(html_input_target.value.replace(",", "."));
   }
 
   if (target_new < 0) {
@@ -490,7 +489,7 @@ function add() {
     return;
   }
   const d = new Date();
-  const items = Number(html_input_items.value);
+  const items = Number(html_input_items.value.replace(",", "."));
   const target = settings["target"];
   const timestamp = d.getTime();
   const row_new = {
@@ -523,6 +522,7 @@ function add() {
   data.push(row_new);
   window.localStorage.setItem("eta_data", JSON.stringify(data));
   update_displays();
+  html_input_items.value = "";
 }
 
 function reset() {
@@ -619,7 +619,7 @@ function add_hist() {
     alert("items missing");
     return;
   }
-  const items = Number(html_input_hist_items.value);
+  const items = Number(html_input_hist_items.value.replace(",", "."));
   const row_new = {
     timestamp: Date.parse(datetime_str),
     items: items,
@@ -628,6 +628,7 @@ function add_hist() {
   data.push(row_new);
   sort_data(data);
   update_displays();
+  html_input_hist_items.value = "";
 }
 
 // initalize
