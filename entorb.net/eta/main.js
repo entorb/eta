@@ -20,9 +20,11 @@ remaining time: render text dynamically: days, hours, min, sec
 remaining time: update dynamically every second
 speed unit auto: per min / per hour / per day
 refactoring: extract helper functions separate file
+apply ESLint and Prettier
 
 TODO/IDEAS
-time since start: dynamically update as well
+?time since start: dynamically update as well?
+use jest for unit tests
 */
 
 // html elements

@@ -113,3 +113,5 @@ function sort_data(data) {
   // console.log(data);
   window.localStorage.setItem("eta_data", JSON.stringify(data));
 }
+
+// export default { remaining_seconds_to_readable_time };
