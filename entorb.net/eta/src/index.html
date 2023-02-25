@@ -131,8 +131,12 @@ TODOs
     <button id="btn_hist_add" style="width:4em" onclick="add_hist()">Add</button>
 
     <h3>Export and Import</h3>
-    <a id="downloadAnchor" style="display:none"></a>
-    <button id="download_data" onclick="download_data()">Export</button> and <b>Import</b>: <input id="upload_data" type="file" onchange="upload_data(this)">
+    <a id="a_download_csv" style="display:none"></a>
+    <button id="download_csv" onclick="download_data_csv()">Export CSV</button>,
+    <a id="a_download_json" style="display:none"></a>
+    <button id="download_data" onclick="download_data_json()">Export JSON</button> and
+    <b>Import JSON</b>:
+    <input id="upload_data" type="file" onchange="upload_data_json(this)">
     <!-- footer -->
     <hr>
     <a href="/">Home</a> - <a href="/contact.php?origin=ETA">Contact</a> - <a href="/impressum.php">Impressum</a>

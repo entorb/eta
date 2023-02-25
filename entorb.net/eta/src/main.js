@@ -21,6 +21,7 @@ remaining time: update dynamically every second
 speed unit auto: per min / per hour / per day
 refactoring: extract helper functions separate file
 apply ESLint and Prettier
+download CSV data
 
 TODO/IDEAS
 ?time since start: dynamically update as well?
@@ -40,6 +41,7 @@ const html_text_pct = document.getElementById("text_pct");
 const html_input_hist_datetime = document.getElementById("input_hist_datetime");
 const html_input_hist_items = document.getElementById("input_hist_items");
 const html_sel_chart_y2 = document.getElementById("sel_chart_y2");
+const html_a_download_csv = document.getElementById("a_download_json");
 
 // global variables
 let data;
@@ -529,18 +531,37 @@ function reset() {
 }
 
 // eslint-disable-next-line no-unused-vars
-function download_data() {
-  const dataStr =
-    "data:text/json;charset=utf-8," +
-    encodeURIComponent(JSON.stringify([settings, data]));
-  const html_dl_anchor = document.getElementById("downloadAnchor");
-  html_dl_anchor.setAttribute("href", dataStr);
-  html_dl_anchor.setAttribute("download", "eta.json");
-  html_dl_anchor.click();
+function download_data_csv() {
+  let csvContent = "data:text/csv;charset=utf-8," + "Date\tItems\tItems/Min\n";
+  data.forEach(function (row) {
+    csvContent +=
+      row["date_str"].replace(", ", " ") + // this is for the DE format 25.2.2023, 10:25:42 -> 25.2.2023 10:25:42
+      "\t" +
+      row["items"] +
+      "\t";
+    if ("items_per_min" in row) {
+      csvContent += row["items_per_min"] + "\n";
+    } else {
+      csvContent += "\n";
+    }
+  });
+  html_a_download_csv.setAttribute("href", encodeURI(csvContent));
+  html_a_download_csv.setAttribute("download", "eta.csv");
+  html_a_download_csv.click();
 }
 
 // eslint-disable-next-line no-unused-vars
-function upload_data(input) {
+function download_data_json() {
+  const dataStr =
+    "data:text/json;charset=utf-8," +
+    encodeURIComponent(JSON.stringify([settings, data]));
+  html_a_download_csv.setAttribute("href", dataStr);
+  html_a_download_csv.setAttribute("download", "eta.json");
+  html_a_download_csv.click();
+}
+
+// eslint-disable-next-line no-unused-vars
+function upload_data_json(input) {
   // from https://javascript.info/file
   const file = input.files[0];
   const reader = new FileReader();
