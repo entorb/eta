@@ -27,6 +27,7 @@ runtime: dynamically update as well
 
 TODO/IDEAS
 100% test coverage for helper.js
+chart: choose to display remaining instead of items
 */
 
 // html elements
@@ -103,6 +104,7 @@ const table = new Tabulator("#div_table", {
 });
 
 function table_update() {
+  console.log("table_update()");
   // IDEA: second function for just adding a row instead of recreating the table each time?
   const data_table = [];
   // BUG: this is only updated when the second time called
@@ -116,6 +118,7 @@ function table_update() {
     // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
     const row = Object.assign({}, data[i]);
     row["remaining"] = Math.abs(row["remaining"]);
+    row["date_str"] = timestamp_to_datestr(row["timestamp"]);
     if ("items_per_min" in row) {
       row["speed"] = calc_speed_in_unit(
         row["items_per_min"],
@@ -129,9 +132,11 @@ function table_update() {
 
 // eslint-disable-next-line no-unused-vars
 function table_delete_rows() {
+  console.log("table_delete_rows()");
   // const selectedRows = table.getSelectedRows();
   const selectedData = table.getSelectedData();
   if (selectedData.length === data.length) {
+    // delete all via reset()
     reset();
     return;
   }
@@ -154,7 +159,6 @@ function table_delete_rows() {
 const chart = echarts.init(html_div_chart);
 // https://echarts.apache.org/en/option.html#color
 // const chart_colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
-const chart_colors = ["#3ba272", "#5470c6", "#91cc75"];
 chart.setOption({
   // title: { text: 'Items per Minute' },
   tooltip: {},
@@ -170,6 +174,8 @@ chart.setOption({
 });
 
 function chart_update() {
+  console.log("chart_update()");
+  const chart_colors = ["#3ba272", "#5470c6", "#91cc75"];
   const data_echart_items = [];
   const data_echart_speed = [];
   const data_echart_eta = [];
@@ -296,6 +302,7 @@ function chart_update() {
 // update functions
 
 function update_total_eta_and_speed() {
+  console.log("update_total_eta_and_speed()");
   const last_row = data.slice(-1)[0];
   const xArray = [];
   const yArray = [];
@@ -314,8 +321,8 @@ function update_total_eta_and_speed() {
   total_timestamp_eta = Math.round(
     last_row["timestamp"] + (-1 * last_row["remaining"]) / slope
   );
-  const d = new Date(total_timestamp_eta);
-  html_text_eta.innerHTML = "<b>" + d.toLocaleString("de-DE") + "</b>";
+  html_text_eta.innerHTML =
+    "<b>" + timestamp_to_datestr(total_timestamp_eta) + "</b>";
 
   // ensure total_items_per_min to be positive
   total_items_per_min = Math.abs(slope) * 60000;
@@ -350,6 +357,7 @@ function update_total_eta_and_speed() {
 }
 
 function update_timers() {
+  console.log("update_timers()");
   if (data.length === 0) {
     return;
   }
@@ -366,9 +374,12 @@ function update_timers() {
 }
 
 function update_start_and_pct() {
+  console.log("update_start_and_pct()");
+  if (data.length === 0) {
+    return;
+  }
   const ts_first = data[0]["timestamp"];
-  const d = new Date(ts_first);
-  html_text_start.innerHTML = d.toLocaleString("de-DE");
+  html_text_start.innerHTML = timestamp_to_datestr(ts_first);
 
   let percent;
   const row_first = data[0];
@@ -392,11 +403,14 @@ function update_start_and_pct() {
 }
 
 function update_displays() {
-  update_start_and_pct();
-  table_update();
-  if (data.length >= 2) {
-    update_total_eta_and_speed();
-    chart_update();
+  console.log("update_displays()");
+  if (data.length > 0) {
+    update_start_and_pct();
+    table_update();
+    if (data.length >= 2) {
+      update_total_eta_and_speed();
+      chart_update();
+    }
   }
 }
 
@@ -464,6 +478,7 @@ function setTarget() {
 }
 
 function add() {
+  console.log("add()");
   if ("target" in settings) {
     // console.log("target: " + settings);
   } else {
@@ -471,6 +486,7 @@ function add() {
     setTarget();
   }
   if (!html_input_items.value) {
+    console.log("items empty");
     return;
   }
   const d = new Date();
@@ -478,11 +494,9 @@ function add() {
   const target = settings["target"];
   const timestamp = d.getTime();
   const row_new = {
-    // "datetime": d,
+    timestamp: timestamp,
     items: items,
     remaining: target - items,
-    date_str: d.toLocaleString("de-DE"),
-    timestamp: timestamp,
   };
   // data already present before we add the new row
   if (data.length >= 1) {
@@ -512,6 +526,8 @@ function add() {
 }
 
 function reset() {
+  console.log("reset()");
+  clearInterval(interval_auto_refresh);
   data = [];
   settings = {};
   total_items_per_min = 0;
@@ -531,13 +547,11 @@ function reset() {
 
 // eslint-disable-next-line no-unused-vars
 function download_data_csv() {
+  console.log("download_data_csv()");
   let csvContent = "data:text/csv;charset=utf-8," + "Date\tItems\tItems/Min\n";
   data.forEach(function (row) {
     csvContent +=
-      row["date_str"].replace(", ", " ") + // this is for the DE format 25.2.2023, 10:25:42 -> 25.2.2023 10:25:42
-      "\t" +
-      row["items"] +
-      "\t";
+      timestamp_to_datestr(row["timestamp"]) + "\t" + row["items"] + "\t";
     if ("items_per_min" in row) {
       csvContent += row["items_per_min"] + "\n";
     } else {
@@ -551,6 +565,7 @@ function download_data_csv() {
 
 // eslint-disable-next-line no-unused-vars
 function download_data_json() {
+  console.log("download_data_json()");
   const dataStr =
     "data:text/json;charset=utf-8," +
     encodeURIComponent(JSON.stringify([settings, data]));
@@ -561,6 +576,7 @@ function download_data_json() {
 
 // eslint-disable-next-line no-unused-vars
 function upload_data_json(input) {
+  console.log("upload_data_json()");
   // from https://javascript.info/file
   const file = input.files[0];
   const reader = new FileReader();
@@ -582,12 +598,14 @@ function upload_data_json(input) {
 
 // eslint-disable-next-line no-unused-vars
 function hide_intro() {
+  console.log("hide_intro()");
   // from https://stackoverflow.com/questions/1070760/javascript-href-vs-onclick-for-callback-function-on-hyperlink
   const html_text_intro = document.getElementById("text_intro");
   html_text_intro.remove();
 }
 
 function add_hist() {
+  console.log("add_hist()");
   if (!("target" in settings)) {
     alert("set target first");
     return;
@@ -598,20 +616,14 @@ function add_hist() {
     return;
   }
   if (html_input_hist_items.value === "") {
-    alert("value missing");
+    alert("items missing");
     return;
   }
   const items = Number(html_input_hist_items.value);
-
-  const timestamp = Date.parse(datetime_str);
-  const d = new Date(timestamp);
-
   const row_new = {
-    // "datetime": d,
+    timestamp: Date.parse(datetime_str),
     items: items,
     remaining: settings["target"] - items,
-    date_str: d.toLocaleString("de-DE"),
-    timestamp: d.getTime(),
   };
   data.push(row_new);
   sort_data(data);

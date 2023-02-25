@@ -43,6 +43,13 @@ function calc_speed_in_unit(items_per_min, speed_unit) {
   return speed;
 }
 
+function timestamp_to_datestr(timestamp) {
+  const d = new Date(timestamp);
+  let date_str = d.toLocaleString("de-DE");
+  date_str = date_str.replace(", ", " "); // this is for the DE format 25.2.2023, 10:25:42 -> 25.2.2023 10:25:42
+  return date_str;
+}
+
 // math helpers
 
 function linreg(x, y) {
@@ -124,6 +131,7 @@ module.exports = {
   zeroPad,
   remaining_seconds_to_readable_time: rel_seconds_to_readable_time,
   calc_speed_in_unit,
+  timestamp_to_datestr,
   linreg,
   calc_row_new_items_per_min_and_eta,
   sort_data,
