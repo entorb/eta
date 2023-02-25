@@ -5,7 +5,7 @@
     },
     "extends": [
         "google",
-        "prettier" // as last one
+        "prettier"
     ],
     "overrides": [],
     "parserOptions": {

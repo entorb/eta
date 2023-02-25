@@ -1,4 +1,5 @@
-lib/
+coverage/
+src/lib/
 node_modules/
 
 package*.json

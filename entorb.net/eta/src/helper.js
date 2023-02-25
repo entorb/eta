@@ -10,8 +10,9 @@ function remaining_seconds_to_readable_time(totalSeconds) {
   // based https://codingbeautydev.com/blog/javascript-convert-seconds-to-hours-and-minutes/
   totalSeconds = Math.floor(totalSeconds);
   if (totalSeconds < 0) {
-    return "";
-  } else if (totalSeconds < 60) {
+    totalSeconds = 0;
+  }
+  if (totalSeconds < 60) {
     return totalSeconds.toString() + "s";
   } else if (totalSeconds < 3600) {
     const minutes = Math.floor(totalSeconds / 60);
@@ -114,4 +115,16 @@ function sort_data(data) {
   window.localStorage.setItem("eta_data", JSON.stringify(data));
 }
 
-// export default { remaining_seconds_to_readable_time };
+// In this way, it will not be a problem for both the test and the browser.
+// from https://stackoverflow.com/questions/66349868/jest-unit-testing-module-export-error-in-browser-console
+// var instead of const needed here
+// eslint-disable-next-line no-var
+var module = module || {};
+module.exports = {
+  zeroPad,
+  remaining_seconds_to_readable_time,
+  calc_speed_in_unit,
+  linreg,
+  calc_row_new_items_per_min_and_eta,
+  sort_data,
+};

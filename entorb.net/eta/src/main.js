@@ -124,6 +124,7 @@ function table_update() {
   table.setData(data_table);
 }
 
+// eslint-disable-next-line no-unused-vars
 function table_delete_rows() {
   // const selectedRows = table.getSelectedRows();
   const selectedData = table.getSelectedData();
@@ -300,7 +301,8 @@ function update_total_eta_and_speed() {
     xArray.push(row["timestamp"]);
     yArray.push(row["remaining"]);
   }
-  const [slope, intercept] = linreg(xArray, yArray);
+  // const [slope, intercept] = linreg(xArray, yArray);
+  const slope = linreg(xArray, yArray)[0];
   // slope = speed in items/ms
   // target > 0: slope of remaining items is negative
   // target = 0: slope of remaining items is positive (but remaining items is neg as well)
@@ -357,6 +359,9 @@ function update_remaining_time() {
 }
 
 function update_start_runtime_and_pct() {
+  if (data.length === 0) {
+    return;
+  }
   const ts_first = data[0]["timestamp"];
   const d = new Date(ts_first);
   html_text_start.innerHTML = d.toLocaleString("de-DE");
@@ -523,6 +528,7 @@ function reset() {
   chart_update();
 }
 
+// eslint-disable-next-line no-unused-vars
 function download_data() {
   const dataStr =
     "data:text/json;charset=utf-8," +
@@ -533,6 +539,7 @@ function download_data() {
   html_dl_anchor.click();
 }
 
+// eslint-disable-next-line no-unused-vars
 function upload_data(input) {
   // from https://javascript.info/file
   const file = input.files[0];
@@ -553,6 +560,7 @@ function upload_data(input) {
   };
 }
 
+// eslint-disable-next-line no-unused-vars
 function hide_intro() {
   // from https://stackoverflow.com/questions/1070760/javascript-href-vs-onclick-for-callback-function-on-hyperlink
   const html_text_intro = document.getElementById("text_intro");
