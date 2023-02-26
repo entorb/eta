@@ -10,6 +10,9 @@ input[type=text] {
     font-size: 20px;
     width: 4em;
 }
+input[type=datetime-local] {
+    font-size: 20px;
+}
 
 button {
     font-size: 20px;
