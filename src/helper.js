@@ -96,8 +96,8 @@ function calc_row_new_items_per_min_and_eta(row_new, row_last) {
       row_new["timestamp"] +
         (row_new["remaining"] / row_new["items_per_min"]) * 60000
     );
-    row_new["eta_str"] = new Date(ts_eta).toLocaleString("de-DE");
     row_new["eta_ts"] = ts_eta;
+    row_new["eta_str"] = timestamp_to_datestr(ts_eta);
   } else {
     delete row_new["eta_str"];
     delete row_new["eta_ts"];
@@ -122,7 +122,8 @@ function sort_data(data) {
   window.localStorage.setItem("eta_data", JSON.stringify(data));
 }
 
-// In this way, it will not be a problem for both the test and the browser.
+// Export functions, needed for Jest unittests
+// Using this hack it works for both, jest and browser.
 // from https://stackoverflow.com/questions/66349868/jest-unit-testing-module-export-error-in-browser-console
 // var instead of const needed here
 // eslint-disable-next-line no-var

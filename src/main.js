@@ -28,6 +28,7 @@ runtime: dynamically update as well
 TODO/IDEAS
 100% test coverage for helper.js
 chart: choose to display remaining instead of items
+allow change of target and trigger recalc of remaining column
 */
 
 // html elements
@@ -102,8 +103,14 @@ const table = new Tabulator("#div_table", {
   ],
 });
 
+function calc_remaining(items) {
+  // always positive
+  return Math.abs(settings["target"] - items);
+}
+
 function table_update() {
   console.log("table_update()");
+  // IDEA: Instead of using this function, the setting reactiveData:true and data:data could be used, but this would require the calculated columns to be present in the data array. This in turn would be problematic for changes of the unit speed...
   // IDEA: second function for just adding a row instead of recreating the table each time?
   const data_table = [];
   // BUG: this is only updated when the second time called
@@ -116,7 +123,6 @@ function table_update() {
     // clone / copy the origial row
     // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
     const row = Object.assign({}, data[i]);
-    row["remaining"] = Math.abs(row["remaining"]);
     row["date_str"] = timestamp_to_datestr(row["timestamp"]);
     if ("items_per_min" in row) {
       row["speed"] = calc_speed_in_unit(
@@ -313,9 +319,7 @@ function update_total_eta_and_speed() {
   // const [slope, intercept] = linreg(xArray, yArray);
   const slope = linreg(xArray, yArray)[0];
   // slope = speed in items/ms
-  // target > 0: slope of remaining items is negative
-  // target = 0: slope of remaining items is positive (but remaining items is neg as well)
-  // last_row["remaining"] / slope is positive for both modes
+  // slope of remaining items is negative
 
   total_timestamp_eta = Math.round(
     last_row["timestamp"] + (-1 * last_row["remaining"]) / slope
@@ -455,14 +459,7 @@ function setTarget() {
     console.log("target unchanged");
     return; // nothing to change
   }
-  if (data.length > 0) {
-    console.log("data already present");
-    alert(
-      "In order to change the target, delete the data first, see button below."
-    );
-    html_input_target.value = settings["target"];
-    return;
-  } else {
+  if (data.length === 0) {
     console.log("target changed to " + target_new);
     settings["target"] = target_new;
     window.localStorage.setItem("eta_settings", JSON.stringify(settings));
@@ -472,7 +469,13 @@ function setTarget() {
     } else {
       table.showColumn("remaining");
     }
-    // console.log(settings);
+  } else {
+    console.log("data already present");
+    alert(
+      "In order to change the target, delete the data first, see button below."
+    );
+    html_input_target.value = settings["target"];
+    return;
   }
 }
 
@@ -495,7 +498,7 @@ function add() {
   const row_new = {
     timestamp: timestamp,
     items: items,
-    remaining: target - items,
+    remaining: calc_remaining(items),
   };
   // data already present before we add the new row
   if (data.length >= 1) {
@@ -623,7 +626,7 @@ function add_hist() {
   const row_new = {
     timestamp: Date.parse(datetime_str),
     items: items,
-    remaining: settings["target"] - items,
+    remaining: calc_remaining(items),
   };
   data.push(row_new);
   sort_data(data);
