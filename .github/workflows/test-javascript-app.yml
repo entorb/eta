@@ -1,0 +1,33 @@
+name: Test JavaScript application
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: latest
+          cache: "npm"
+      - run: npm ci
+      - run: npm test
+
+      # - name: Testing via npm jest
+      #   uses: willcaul/jest-github-action@v2
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     test-command: "npm test"
+      #     changes-only: false
+      #     coverage-comment: true
