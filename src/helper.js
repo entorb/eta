@@ -129,7 +129,7 @@ function sort_data(data) {
 var module = module || {};
 module.exports = {
   zeroPad,
-  remaining_seconds_to_readable_time: rel_seconds_to_readable_time,
+  rel_seconds_to_readable_time,
   calc_speed_in_unit,
   timestamp_to_datestr,
   linreg,
