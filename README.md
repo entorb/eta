@@ -12,13 +12,15 @@ Estimates remaining waiting time, hosted at https://entorb.net/eta/
 * Mode countup (target > 0)
 * Table and chart of speed over time
 
-## How to use this repo
+## How to use this repository
+This tool is coded in plain JavaScript, sources are in `src/`
+
 These external libraries are manually downloaded and placed in `src/lib/` via `scripts/download_libs.sh`
 * [Tabulator](https://tabulator.info/) 5.4
 * [ECharts](https://echarts.apache.org) 5.4.1
 
 Code quality checks
-GitHub Actions are used to perform code quality checks upon PR creation. To run it locally:
+GitHub Actions are used to perform automated code quality checks upon PR creation. To run it locally:
 * `npm ci` to install packages for the actions below
 * `npm update` to update the packages versions used below
 * `npm run format` to run code style check using Prettier
