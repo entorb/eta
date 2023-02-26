@@ -1,0 +1,26 @@
+{
+  "name": "eta",
+  "version": "1.0.0",
+  "description": "Estimates remaining waiting time, hosted at https://entorb.net/eta/",
+  "author": "Torben Menke",
+  "license": "gpl-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/entorb/eta/"
+  },
+  "main": "main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "jest",
+    "testc": "jest --coverage"
+  },
+  "devDependencies": {
+    "eslint": "^8.34.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^8.6.0",
+    "jest": "^29.4.3",
+    "prettier": "^2.8.4"
+  }
+}
