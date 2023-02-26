@@ -13,6 +13,8 @@
     "lib": "lib"
   },
   "scripts": {
+    "format": "npx prettier --check src/*.js *.json",
+    "lint": "eslint src/*.js",
     "test": "jest",
     "testc": "jest --coverage"
   },
