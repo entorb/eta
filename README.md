@@ -15,5 +15,6 @@ Key features
 ## How to use this repo
 * run `npm ci` to install packages for linting and testing
 * run `npm test` to run unit tests using jest
-* run `npm run testc` to run unit tests using jest and display code coverage results
+* run `npm run testc` to run unit tests using jest and display code coverage result
 * run `npm update` to update packages for linting and testing
+* note: tests are written for German timezone
