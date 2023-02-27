@@ -105,14 +105,6 @@ const table = new Tabulator("#div_table", {
   ],
 });
 
-function calc_remaining_items(items) {
-  if (settings["target"] === 0) {
-    return items;
-  } else {
-    return settings["target"] - items;
-  }
-}
-
 function table_update() {
   console.log("table_update()");
   // IDEA: Instead of using this function, the setting reactiveData:true and data:data could be used, but this would require the calculated columns to be present in the data array. This in turn would be problematic for changes of the unit speed...
@@ -503,7 +495,7 @@ function add() {
   const row_new = {
     timestamp: timestamp,
     items: items,
-    remaining: calc_remaining_items(items),
+    remaining: calc_remaining_items(items, settings["target"]),
   };
   // data already present before we add the new row
   if (data.length >= 1) {
@@ -631,7 +623,7 @@ function add_hist() {
   const row_new = {
     timestamp: Date.parse(datetime_str),
     items: items,
-    remaining: calc_remaining_items(items),
+    remaining: calc_remaining_items(items, settings["target"]),
   };
   data.push(row_new);
   sort_data(data);

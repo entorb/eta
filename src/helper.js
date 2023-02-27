@@ -50,6 +50,14 @@ function timestamp_to_datestr(timestamp) {
   return date_str;
 }
 
+function calc_remaining_items(items, target) {
+  if (target === 0) {
+    return items;
+  } else {
+    return target - items;
+  }
+}
+
 // math helpers
 
 function linreg(x, y) {
@@ -133,6 +141,7 @@ module.exports = {
   rel_seconds_to_readable_time,
   calc_speed_in_unit,
   timestamp_to_datestr,
+  calc_remaining_items,
   linreg,
   calc_row_new_delta,
   sort_data,

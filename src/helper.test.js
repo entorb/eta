@@ -59,8 +59,18 @@ describe("Testing calc_speed_in_unit()", () => {
 });
 
 const { timestamp_to_datestr } = require("./helper");
-describe("Testing calc_speed_in_unit()", () => {
+describe("Testing timestamp_to_datestr()", () => {
   test("Minute", () => {
     expect(timestamp_to_datestr(1677320618262)).toEqual("25.2.2023 11:23:38");
+  });
+});
+
+const { calc_remaining_items } = require("./helper");
+describe("Testing calc_remaining_items()", () => {
+  test("target=0", () => {
+    expect(calc_remaining_items(30, 0)).toEqual(30);
+  });
+  test("target>0", () => {
+    expect(calc_remaining_items(30, 100)).toEqual(70);
   });
 });
