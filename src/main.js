@@ -106,8 +106,11 @@ const table = new Tabulator("#div_table", {
 });
 
 function calc_remaining_items(items) {
-  // always positive
-  return Math.abs(settings["target"] - items);
+  if (settings["target"] === 0) {
+    return items;
+  } else {
+    return settings["target"] - items;
+  }
 }
 
 function table_update() {
