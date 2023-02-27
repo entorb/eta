@@ -82,7 +82,16 @@ describe("Testing linreg()", () => {
     1677464725877, 1677464727326, 1677464728429, 1677464729925, 1677465568115,
   ];
   const y = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-  test("target=0", () => {
+  test("test 1", () => {
     expect(linreg(x, y)).toEqual([-0.00000605439111290888, 10156032.530841943]);
   });
 });
+
+// const { calc_row_new_delta } = require("./helper");
+// describe("Testing calc_row_new_delta()", () => {
+//   row_new;
+//   row_last;
+//   test("test 1", () => {
+//     expect(calc_row_new_delta(x, y)).toEqual([]);
+//   });
+// });

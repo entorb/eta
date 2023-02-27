@@ -482,7 +482,7 @@ function set_target() {
     });
     // re-calculate eta
     for (let i = 1; i < data.length; i++) {
-      calc_row_new_delta(data[i], data[i - 1]);
+      data[i] = calc_row_new_delta(data[i], data[i - 1]);
     }
     update_displays();
   }
@@ -510,7 +510,7 @@ function add() {
   const items = Number(html_input_items.value.replace(",", "."));
   const target = settings["target"];
   const timestamp = d.getTime();
-  const row_new = {
+  let row_new = {
     timestamp: timestamp,
     items: items,
     remaining: calc_remaining_items(items, settings["target"]),
@@ -534,7 +534,7 @@ function add() {
       alert("New entry must not exceed target.");
       return;
     }
-    calc_row_new_delta(row_new, row_last);
+    row_new = calc_row_new_delta(row_new, row_last);
   }
 
   data.push(row_new);

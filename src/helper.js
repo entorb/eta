@@ -90,6 +90,7 @@ function linreg(x, y) {
 // data modification
 
 function calc_row_new_delta(row_new, row_last) {
+  // modifies row_new
   // calc items_per_min
   if (row_new["timestamp"] != row_last["timestamp"]) {
     row_new["items_per_min"] =
@@ -110,6 +111,7 @@ function calc_row_new_delta(row_new, row_last) {
     delete row_new["eta_str"];
     delete row_new["eta_ts"];
   }
+  return row_new;
 }
 
 function sort_data(data) {
@@ -123,7 +125,7 @@ function sort_data(data) {
     delete data[0]["items_per_min"];
     // re-calculate items per minute
     for (let i = 1; i < data.length; i++) {
-      calc_row_new_delta(data[i], data[i - 1]);
+      data[i] = calc_row_new_delta(data[i], data[i - 1]);
     }
   }
   // console.log(data);
