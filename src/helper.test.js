@@ -74,3 +74,15 @@ describe("Testing calc_remaining_items()", () => {
     expect(calc_remaining_items(30, 100)).toEqual(70);
   });
 });
+
+const { linreg } = require("./helper");
+describe("Testing linreg()", () => {
+  const x = [
+    1677464718648, 1677464720558, 1677464721845, 1677464723069, 1677464724581,
+    1677464725877, 1677464727326, 1677464728429, 1677464729925, 1677465568115,
+  ];
+  const y = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+  test("target=0", () => {
+    expect(linreg(x, y)).toEqual([-0.00000605439111290888, 10156032.530841943]);
+  });
+});
