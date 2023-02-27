@@ -81,7 +81,7 @@ function linreg(x, y) {
 
 // data modification
 
-function calc_row_new_items_per_min_and_eta(row_new, row_last) {
+function calc_row_new_delta(row_new, row_last) {
   // calc items_per_min
   if (row_new["timestamp"] != row_last["timestamp"]) {
     row_new["items_per_min"] =
@@ -116,7 +116,7 @@ function sort_data(data) {
   }
   // re-calculate items per minute
   for (let i = 1; i < data.length; i++) {
-    calc_row_new_items_per_min_and_eta(data[i], data[i - 1]);
+    calc_row_new_delta(data[i], data[i - 1]);
   }
   // console.log(data);
   window.localStorage.setItem("eta_data", JSON.stringify(data));
@@ -134,6 +134,6 @@ module.exports = {
   calc_speed_in_unit,
   timestamp_to_datestr,
   linreg,
-  calc_row_new_items_per_min_and_eta,
+  calc_row_new_delta,
   sort_data,
 };

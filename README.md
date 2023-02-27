@@ -28,3 +28,6 @@ GitHub Actions are used to perform automated code quality checks upon PR creatio
 * `npm test` to run unit tests using Jest
 * `npm run testc` to run unit tests using Jest and display code coverage result
 * note: tests are written for German timezone
+
+Spell checking via CSpell
+See `spelling.json` for custom dictionary

@@ -28,7 +28,9 @@ runtime: dynamically update as well
 TODO/IDEAS
 100% test coverage for helper.js
 chart: choose to display remaining instead of items
-allow change of target and trigger recalc of remaining column
+set target: allow change of target and trigger recalc of remaining items for all rows
+tabulator: use global data, and update column speed name upon switching unit
+echarts: use global data, and update speed unit
 */
 
 // html elements
@@ -103,7 +105,7 @@ const table = new Tabulator("#div_table", {
   ],
 });
 
-function calc_remaining(items) {
+function calc_remaining_items(items) {
   // always positive
   return Math.abs(settings["target"] - items);
 }
@@ -120,7 +122,7 @@ function table_update() {
 
   for (let i = 0; i < data.length; i++) {
     // bad: const row = data[i];
-    // clone / copy the origial row
+    // clone / copy the original row
     // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
     const row = Object.assign({}, data[i]);
     row["date_str"] = timestamp_to_datestr(row["timestamp"]);
@@ -181,23 +183,23 @@ chart.setOption({
 function chart_update() {
   console.log("chart_update()");
   const chart_colors = ["#3ba272", "#5470c6", "#91cc75"];
-  const data_echart_items = [];
-  const data_echart_speed = [];
-  const data_echart_eta = [];
+  const data_echarts_items = [];
+  const data_echarts_speed = [];
+  const data_echarts_eta = [];
   const mode = html_sel_chart_y2.value;
 
   for (let i = 0; i < data.length; i++) {
     // clone, see update_table
     const row = Object.assign({}, data[i]);
-    data_echart_items.push([new Date(row["timestamp"]), row["items"]]);
+    data_echarts_items.push([new Date(row["timestamp"]), row["items"]]);
     if ("items_per_min" in row) {
-      data_echart_speed.push([
+      data_echarts_speed.push([
         new Date(row["timestamp"]),
         calc_speed_in_unit(row["items_per_min"], total_speed_time_unit),
       ]);
     }
     if ("items_per_min" in row) {
-      data_echart_eta.push([
+      data_echarts_eta.push([
         new Date(row["timestamp"]),
         new Date(row["eta_ts"]),
       ]);
@@ -251,7 +253,7 @@ function chart_update() {
     ...series_common,
     ...{
       yAxisIndex: 0,
-      data: data_echart_items,
+      data: data_echarts_items,
       color: chart_colors[0],
       areaStyle: { opacity: 0.5 },
     },
@@ -262,7 +264,7 @@ function chart_update() {
     ...{
       yAxisIndex: 1,
       color: chart_colors[1],
-      data: data_echart_speed,
+      data: data_echarts_speed,
       markLine: {
         symbol: "none",
         label: { show: false },
@@ -278,7 +280,7 @@ function chart_update() {
     ...{
       yAxisIndex: 1,
       color: chart_colors[1],
-      data: data_echart_eta,
+      data: data_echarts_eta,
       markLine: {
         symbol: "none",
         label: { show: false },
@@ -347,7 +349,7 @@ function update_total_eta_and_speed() {
   // stop auto-refresh timer
   clearInterval(interval_auto_refresh);
 
-  // re-initalize the auto-refresh timer
+  // re-initialize the auto-refresh timer
   const min_remaining = (total_timestamp_eta - Date.now()) / 60 / 1000;
   if (min_remaining > 0) {
     let time_sleeptime = 1000;
@@ -498,28 +500,28 @@ function add() {
   const row_new = {
     timestamp: timestamp,
     items: items,
-    remaining: calc_remaining(items),
+    remaining: calc_remaining_items(items),
   };
   // data already present before we add the new row
   if (data.length >= 1) {
     const row_last = data.slice(-1)[0];
 
-    // in mode=countdown, we only exept decreasing values
+    // in mode=countdown, we only except decreasing values
     if (target === 0 && items >= row_last["items"]) {
       alert("New entry must be < previous entry in countdown mode.");
       return;
     }
-    // in mode=countup, we only exept increasing values
+    // in mode=countup, we only except increasing values
     if (target > 0 && items <= row_last["items"]) {
       alert("New entry must be > previous entry in countup mode.");
       return;
     }
-    // in mode=countup, we do not exept values > target
+    // in mode=countup, we do not except values > target
     if (target > 0 && items > target) {
       alert("New entry must not exceed target.");
       return;
     }
-    calc_row_new_items_per_min_and_eta(row_new, row_last);
+    calc_row_new_delta(row_new, row_last);
   }
 
   data.push(row_new);
@@ -626,7 +628,7 @@ function add_hist() {
   const row_new = {
     timestamp: Date.parse(datetime_str),
     items: items,
-    remaining: calc_remaining(items),
+    remaining: calc_remaining_items(items),
   };
   data.push(row_new);
   sort_data(data);
@@ -634,14 +636,14 @@ function add_hist() {
   html_input_hist_items.value = "";
 }
 
-// initalize
+// initialize
 
 // wait for tableBuilt event and update all data displays afterwards
 table.on("tableBuilt", function () {
   update_displays();
 });
 
-// autorefresh of remaining time
+// auto-refresh of remaining time
 let interval_auto_refresh;
 // = setInterval(update_remaining_time, 1000);
 // done in calc_total_eta_and_speed()
