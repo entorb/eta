@@ -118,13 +118,13 @@ function sort_data(data) {
   if (data.length > 1) {
     data.sort((a, b) => a.timestamp - b.timestamp);
   }
-  // remove items_per_min from new first item
   if (data.length > 0) {
+    // remove items_per_min from new first item
     delete data[0]["items_per_min"];
-  }
-  // re-calculate items per minute
-  for (let i = 1; i < data.length; i++) {
-    calc_row_new_delta(data[i], data[i - 1]);
+    // re-calculate items per minute
+    for (let i = 1; i < data.length; i++) {
+      calc_row_new_delta(data[i], data[i - 1]);
+    }
   }
   // console.log(data);
   window.localStorage.setItem("eta_data", JSON.stringify(data));

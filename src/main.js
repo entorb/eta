@@ -24,11 +24,11 @@ apply ESLint and Prettier
 use jest for unit tests
 download CSV data
 runtime: dynamically update as well
+set target: allow change of target and trigger recalc of remaining items for all rows
 
 TODO/IDEAS
 100% test coverage for helper.js
 chart: choose to display remaining instead of items
-set target: allow change of target and trigger recalc of remaining items for all rows
 tabulator: use global data, and update column speed name upon switching unit
 echarts: use global data, and update speed unit
 */
@@ -63,12 +63,7 @@ let total_speed_time_unit = "Minute"; // Minute/Hour/Day
   } else {
     data = [];
   }
-  if (data.length === 0) {
-    // keep input empty
-  } else {
-    const last_row = data.slice(-1)[0];
-    html_input_items.value = last_row["items"];
-  }
+
   const localStorageSettings = window.localStorage.getItem("eta_settings");
   if (localStorageSettings) {
     settings = JSON.parse(localStorageSettings);
@@ -181,8 +176,10 @@ function chart_update() {
   const data_echarts_items = [];
   const data_echarts_speed = [];
   const data_echarts_eta = [];
-  const mode = html_sel_chart_y2.value;
+  const y2_series = html_sel_chart_y2.value;
 
+  // populate data arrays
+  // TODO: only calc the ones need for the selected y2_series
   for (let i = 0; i < data.length; i++) {
     // clone, see update_table
     const row = Object.assign({}, data[i]);
@@ -201,6 +198,8 @@ function chart_update() {
     }
   }
 
+  // generate settings per Axis
+  // TODO: only generate the ones need for the selected y2_series
   const yAxis_items = {
     name: "Items",
     position: "left",
@@ -286,13 +285,13 @@ function chart_update() {
     },
   };
 
-  if (mode === "speed") {
+  if (y2_series === "speed") {
     chart.setOption({
       series: [series_items, series_speed],
       xAxis: { type: "time" },
       yAxis: [yAxis_items, yAxis2_speed],
     });
-  } else if (mode === "eta") {
+  } else if (y2_series === "eta") {
     chart.setOption({
       series: [series_items, series_eta],
       xAxis: { type: "time" },
@@ -419,7 +418,7 @@ function update_displays() {
 html_input_target.addEventListener("keypress", function (event) {
   if (event.key === "Enter") {
     event.preventDefault();
-    setTarget();
+    set_target();
   }
 });
 html_input_items.addEventListener("keypress", function (event) {
@@ -437,9 +436,11 @@ html_input_hist_items.addEventListener("keypress", function (event) {
 
 // FE-triggered functions
 
-function setTarget() {
+function set_target() {
   console.log("setTarget()");
   let target_new;
+
+  // read input
   if (!html_input_target.value) {
     target_new = 0;
     html_input_target.value = 0;
@@ -447,6 +448,7 @@ function setTarget() {
     target_new = Number(html_input_target.value.replace(",", "."));
   }
 
+  // validation
   if (target_new < 0) {
     console.log("new target negativ");
     alert("Target must be positiv.");
@@ -456,23 +458,36 @@ function setTarget() {
     console.log("target unchanged");
     return; // nothing to change
   }
-  if (data.length === 0) {
-    console.log("target changed to " + target_new);
-    settings["target"] = target_new;
-    window.localStorage.setItem("eta_settings", JSON.stringify(settings));
-
-    if (settings["target"] === 0) {
-      table.hideColumn("remaining");
-    } else {
-      table.showColumn("remaining");
-    }
-  } else {
-    console.log("data already present");
+  if (settings["target"] === 0 && target_new > 0 && data.length > 0) {
+    console.log("old target=0, new target!=0, data existing");
     alert(
-      "In order to change the target, delete the data first, see button below."
+      "In mode countdown target change is not allowed, delete existing data first."
     );
-    html_input_target.value = settings["target"];
+    html_input_target.value = 0;
     return;
+  }
+
+  // persist the new target
+  console.log("target changed to " + target_new);
+  settings["target"] = target_new;
+  window.localStorage.setItem("eta_settings", JSON.stringify(settings));
+
+  // update re-calculate remaining items for existing data
+  if (data.length > 0) {
+    data.forEach(function (row) {
+      row["remaining"] = calc_remaining_items(row["items"], settings["target"]);
+    });
+    // re-calculate eta
+    for (let i = 1; i < data.length; i++) {
+      calc_row_new_delta(data[i], data[i - 1]);
+    }
+    update_displays();
+  }
+
+  if (settings["target"] === 0) {
+    table.hideColumn("remaining");
+  } else {
+    table.showColumn("remaining");
   }
 }
 
@@ -482,7 +497,7 @@ function add() {
     // console.log("target: " + settings);
   } else {
     console.log("setting target prio to add items value");
-    setTarget();
+    set_target();
   }
   if (!html_input_items.value) {
     console.log("items empty");
