@@ -101,7 +101,7 @@ const table = new Tabulator("#div_table", {
 });
 
 function table_update() {
-  console.log("table_update()");
+  console.log("fnc table_update()");
   // IDEA: Instead of using this function, the setting reactiveData:true and data:data could be used, but this would require the calculated columns to be present in the data array. This in turn would be problematic for changes of the unit speed...
   // IDEA: second function for just adding a row instead of recreating the table each time?
   const data_table = [];
@@ -129,12 +129,13 @@ function table_update() {
 
 // eslint-disable-next-line no-unused-vars
 function table_delete_rows() {
-  console.log("table_delete_rows()");
+  console.log("fnc table_delete_rows()");
   // const selectedRows = table.getSelectedRows();
   const selectedData = table.getSelectedData();
   if (selectedData.length === data.length) {
     // delete all via reset()
     reset();
+    console.log("deleting all table data");
     return;
   }
   for (let i = 0; i < selectedData.length; i++) {
@@ -171,7 +172,7 @@ chart.setOption({
 });
 
 function chart_update() {
-  console.log("chart_update()");
+  console.log("fnc chart_update()");
   const chart_colors = ["#3ba272", "#5470c6", "#91cc75"];
   const data_echarts_items = [];
   const data_echarts_speed = [];
@@ -303,7 +304,7 @@ function chart_update() {
 // update functions
 
 function update_total_eta_and_speed() {
-  console.log("update_total_eta_and_speed()");
+  console.log("fnc update_total_eta_and_speed()");
   const last_row = data.slice(-1)[0];
   const xArray = [];
   const yArray = [];
@@ -356,8 +357,9 @@ function update_total_eta_and_speed() {
 }
 
 function update_timers() {
-  console.log("update_timers()");
+  console.log("fnc update_timers()");
   if (data.length === 0) {
+    console.log("data empty, nothing to do");
     return;
   }
   const ms_passed = Date.now() - data[0]["timestamp"];
@@ -373,8 +375,9 @@ function update_timers() {
 }
 
 function update_start_and_pct() {
-  console.log("update_start_and_pct()");
+  console.log("fnc update_start_and_pct()");
   if (data.length === 0) {
+    console.log("data empty, nothing to do");
     return;
   }
   const ts_first = data[0]["timestamp"];
@@ -402,7 +405,7 @@ function update_start_and_pct() {
 }
 
 function update_displays() {
-  console.log("update_displays()");
+  console.log("fnc update_displays()");
   if (data.length > 0) {
     update_start_and_pct();
     table_update();
@@ -437,7 +440,7 @@ html_input_hist_items.addEventListener("keypress", function (event) {
 // FE-triggered functions
 
 function set_target() {
-  console.log("setTarget()");
+  console.log("fnc set_target()");
   let target_new;
 
   // read input
@@ -452,11 +455,11 @@ function set_target() {
   if (target_new < 0) {
     console.log("new target negativ");
     alert("Target must be positiv.");
-    return; // new target is neg
+    return;
   }
   if (target_new === settings["target"]) {
     console.log("target unchanged");
-    return; // nothing to change
+    return;
   }
   if (settings["target"] === 0 && target_new > 0 && data.length > 0) {
     console.log("old target=0, new target!=0, data existing");
@@ -492,7 +495,7 @@ function set_target() {
 }
 
 function add() {
-  console.log("add()");
+  console.log("fnc add()");
   if ("target" in settings) {
     // console.log("target: " + settings);
   } else {
@@ -541,7 +544,7 @@ function add() {
 }
 
 function reset() {
-  console.log("reset()");
+  console.log("fnc reset()");
   clearInterval(interval_auto_refresh);
   data = [];
   settings = {};
@@ -562,7 +565,7 @@ function reset() {
 
 // eslint-disable-next-line no-unused-vars
 function download_data_csv() {
-  console.log("download_data_csv()");
+  console.log("fnc download_data_csv()");
   let csvContent = "data:text/csv;charset=utf-8," + "Date\tItems\tItems/Min\n";
   data.forEach(function (row) {
     csvContent +=
@@ -580,7 +583,7 @@ function download_data_csv() {
 
 // eslint-disable-next-line no-unused-vars
 function download_data_json() {
-  console.log("download_data_json()");
+  console.log("fnc download_data_json()");
   const dataStr =
     "data:text/json;charset=utf-8," +
     encodeURIComponent(JSON.stringify([settings, data]));
@@ -591,7 +594,7 @@ function download_data_json() {
 
 // eslint-disable-next-line no-unused-vars
 function upload_data_json(input) {
-  console.log("upload_data_json()");
+  console.log("fnc upload_data_json()");
   // from https://javascript.info/file
   const file = input.files[0];
   const reader = new FileReader();
@@ -613,14 +616,14 @@ function upload_data_json(input) {
 
 // eslint-disable-next-line no-unused-vars
 function hide_intro() {
-  console.log("hide_intro()");
+  console.log("fnc hide_intro()");
   // from https://stackoverflow.com/questions/1070760/javascript-href-vs-onclick-for-callback-function-on-hyperlink
   const html_text_intro = document.getElementById("text_intro");
   html_text_intro.remove();
 }
 
 function add_hist() {
-  console.log("add_hist()");
+  console.log("fnc add_hist()");
   if (!("target" in settings)) {
     alert("set target first");
     return;
