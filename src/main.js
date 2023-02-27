@@ -661,10 +661,6 @@ let interval_auto_refresh;
 // = setInterval(update_remaining_time, 1000);
 // done in calc_total_eta_and_speed()
 
-if (data.length >= 1) {
-  update_total_eta_and_speed();
-}
-
 // hist_datetime to now
 html_input_hist_datetime.value = new Date().toISOString().substring(0, 16);
 
