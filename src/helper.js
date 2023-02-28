@@ -130,6 +130,7 @@ function sort_data(data) {
   }
   // console.log(data);
   window.localStorage.setItem("eta_data", JSON.stringify(data));
+  return data;
 }
 
 // Export functions, needed for Jest unittests

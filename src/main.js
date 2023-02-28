@@ -148,7 +148,7 @@ function table_delete_rows() {
     }
   }
   // TODO: sort not needed, but was too lazy to add another function
-  sort_data(data);
+  data = sort_data(data);
   update_displays();
 }
 
@@ -644,7 +644,7 @@ function add_hist() {
     remaining: calc_remaining_items(items, settings["target"]),
   };
   data.push(row_new);
-  sort_data(data);
+  data = sort_data(data);
   update_displays();
   html_input_hist_items.value = "";
 }

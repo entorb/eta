@@ -1,12 +1,17 @@
+/* eslint-disable require-jsdoc */
 /* eslint-disable camelcase */
+
 /* from https://marioyepes.com/jest-setup-vanilla-javascript-project/
 and
 https://daily-dev-tips.com/posts/adding-jest-test-to-a-project/
-/*
 
-npm install --save-dev jest
-package.json: set "scripts": {"test": "jest --coverage"},
+npm install --save-dev jest jest-environment-jsdom
+package.json: set
+"scripts": {"test": "jest --coverage"},
+"jest": { "testEnvironment": "jsdom" }
 npm test
+
+jsdom provides window.localStorage
 */
 
 // importing the functions to test
@@ -87,11 +92,56 @@ describe("Testing linreg()", () => {
   });
 });
 
-// const { calc_row_new_delta } = require("./helper");
-// describe("Testing calc_row_new_delta()", () => {
-//   row_new;
-//   row_last;
-//   test("test 1", () => {
-//     expect(calc_row_new_delta(x, y)).toEqual([]);
-//   });
-// });
+const { calc_row_new_delta } = require("./helper");
+describe("Testing calc_row_new_delta()", () => {
+  const row_last = { items: 1, remaining: 9, timestamp: 1677554357951 };
+  const row_new = { items: 2, remaining: 8, timestamp: 1677554364952 };
+  test("test 1", () => {
+    expect(calc_row_new_delta(row_new, row_last)).toEqual({
+      items: 2,
+      remaining: 8,
+      timestamp: 1677554364952,
+      eta_str: "28.2.2023 04:20:20",
+      eta_ts: 1677554420960,
+      items_per_min: 8.570204256534781,
+    });
+  });
+});
+
+const { sort_data } = require("./helper");
+describe("Testing sort_data()", () => {
+  data = [
+    {
+      timestamp: 1677554364952,
+      items: 2,
+      remaining: 8,
+      items_per_min: 8.570204256534781,
+      eta_ts: 1677554420960,
+      eta_str: "28.2.2023 04:20:20",
+    },
+    {
+      timestamp: 1677554357951,
+      items: 1,
+      remaining: 9,
+    },
+  ];
+  test("test 1", () => {
+    console.log(data);
+    expect(sort_data(data)).toEqual([
+      {
+        timestamp: 1677554357951,
+        items: 1,
+        remaining: 9,
+      },
+      {
+        timestamp: 1677554364952,
+        items: 2,
+        remaining: 8,
+        items_per_min: 8.570204256534781,
+        eta_ts: 1677554420960,
+        eta_str: "28.2.2023 04:20:20",
+      },
+    ]);
+    console.log(data);
+  });
+});
