@@ -1,20 +1,18 @@
-/* idea: switch button from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_switch */
-
-input[type=number] {
-    text-align: right;
-    font-size: 20px;
-    width: 4em;
-}
-input[type=text] {
-    text-align: right;
-    font-size: 20px;
-    width: 4em;
-}
-input[type=datetime-local] {
-    font-size: 20px;
-}
-
 button {
+    font-size: 20px;
+}
+
+select {
+    font-size: 20px;
+}
+
+input[type=text] {
+    font-size: 20px;
+    text-align: right;
+    width: 4em;
+}
+
+input[type=datetime-local] {
     font-size: 20px;
 }
 
@@ -23,6 +21,8 @@ input[type=file] {
     color: transparent;
 }
 
-select {
+/* input[type=number] {
+    text-align: right;
     font-size: 20px;
-}
+    width: 4em;
+} */
