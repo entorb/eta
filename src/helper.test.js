@@ -21,15 +21,15 @@ jsdom provides window.localStorage
 // throws SyntaxError: Cannot use import statement outside a module
 // so using require instead
 
-const { zeroPad } = require("./helper");
 describe("Testing zeroPad", () => {
+  const { zeroPad } = require("./helper");
   test("1->01", () => {
     expect(zeroPad(1, 2)).toEqual("01");
   });
 });
 
-const { rel_seconds_to_readable_time } = require("./helper");
 describe("Testing remaining_seconds_to_readable_time()", () => {
+  const { rel_seconds_to_readable_time } = require("./helper");
   test("1s", () => {
     expect(rel_seconds_to_readable_time(1)).toEqual("1s");
   });
@@ -50,8 +50,8 @@ describe("Testing remaining_seconds_to_readable_time()", () => {
   });
 });
 
-const { calc_speed_in_unit } = require("./helper");
 describe("Testing calc_speed_in_unit()", () => {
+  const { calc_speed_in_unit } = require("./helper");
   test("Minute", () => {
     expect(calc_speed_in_unit(1234.567, "Minute")).toEqual(1234.6);
   });
@@ -63,15 +63,15 @@ describe("Testing calc_speed_in_unit()", () => {
   });
 });
 
-const { timestamp_to_datestr } = require("./helper");
 describe("Testing timestamp_to_datestr()", () => {
+  const { timestamp_to_datestr } = require("./helper");
   test("Minute", () => {
     expect(timestamp_to_datestr(1677320618262)).toEqual("25.2.2023 11:23:38");
   });
 });
 
-const { calc_remaining_items } = require("./helper");
 describe("Testing calc_remaining_items()", () => {
+  const { calc_remaining_items } = require("./helper");
   test("target=0", () => {
     expect(calc_remaining_items(30, 0)).toEqual(30);
   });
@@ -80,8 +80,8 @@ describe("Testing calc_remaining_items()", () => {
   });
 });
 
-const { linreg } = require("./helper");
 describe("Testing linreg()", () => {
+  const { linreg } = require("./helper");
   const x = [
     1677464718648, 1677464720558, 1677464721845, 1677464723069, 1677464724581,
     1677464725877, 1677464727326, 1677464728429, 1677464729925, 1677465568115,
@@ -92,8 +92,8 @@ describe("Testing linreg()", () => {
   });
 });
 
-const { calc_row_new_delta } = require("./helper");
 describe("Testing calc_row_new_delta()", () => {
+  const { calc_row_new_delta } = require("./helper");
   const row_last = { items: 1, remaining: 9, timestamp: 1677554357951 };
   const row_new = { items: 2, remaining: 8, timestamp: 1677554364952 };
   test("test 1", () => {
@@ -108,8 +108,8 @@ describe("Testing calc_row_new_delta()", () => {
   });
 });
 
-const { sort_data } = require("./helper");
 describe("Testing sort_data()", () => {
+  const { sort_data } = require("./helper");
   data = [
     {
       timestamp: 1677554364952,
