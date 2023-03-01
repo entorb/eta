@@ -126,7 +126,6 @@ describe("Testing sort_data()", () => {
     },
   ];
   test("test 1", () => {
-    console.log(data);
     expect(sort_data(data)).toEqual([
       {
         timestamp: 1677554357951,
@@ -142,6 +141,5 @@ describe("Testing sort_data()", () => {
         eta_str: "28.2.2023 04:20:20",
       },
     ]);
-    console.log(data);
   });
 });
