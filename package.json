@@ -27,6 +27,11 @@
     "prettier": "^2.8.4"
   },
   "jest": {
-    "testEnvironment": "jsdom"
+    "testEnvironment": "jsdom",
+    "collectCoverageFrom": [
+      "src/*.js",
+      "!src/lib/*",
+      "!src/main.js"
+    ]
   }
 }
