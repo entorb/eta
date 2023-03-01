@@ -25,7 +25,10 @@ jobs:
       - run: npm ci
       - run: npm run format
       - run: npm run lint
-      - run: npm test
+      - name: download libs
+        run: sh scripts/download_libs.sh
+      - name: Jest unit tests
+        run: npm test
 
       # - name: Testing via npm jest
       #   uses: willcaul/jest-github-action@v2

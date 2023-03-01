@@ -133,6 +133,61 @@ function sort_data(data) {
   return data;
 }
 
+function table_create() {
+  const table = new Tabulator("#div_table", {
+    height: "100%",
+    // data: data,
+    layout: "fitDataStretch", // fit columns to width of table (optional)
+    selectable: true,
+    columns: [
+      {
+        title: "Date",
+        field: "date_str",
+        sorter: "datetime",
+        headerSort: false,
+        hozAlign: "center",
+      }, // datetime sorting requires luxon.js library
+      { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
+      {
+        title: "Remaining",
+        field: "remaining",
+        headerSort: false,
+        hozAlign: "center",
+      },
+      { title: "Speed", field: "speed", headerSort: false, hozAlign: "center" },
+      { title: "ETA", field: "eta_str", headerSort: false, hozAlign: "left" },
+    ],
+  });
+  return table;
+}
+
+function table_update(data, total_speed_time_unit) {
+  console.log("fnc table_update()");
+  // IDEA: Instead of using this function, the setting reactiveData:true and data:data could be used, but this would require the calculated columns to be present in the data array. This in turn would be problematic for changes of the unit speed...
+  // IDEA: second function for just adding a row instead of recreating the table each time?
+  const data_table = [];
+  // BUG: this is only updated when the second time called
+  table.updateColumnDefinition("speed", {
+    title: "Items/" + total_speed_time_unit,
+  });
+
+  for (let i = 0; i < data.length; i++) {
+    // bad: const row = data[i];
+    // clone / copy the original row
+    // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
+    const row = Object.assign({}, data[i]);
+    row["date_str"] = timestamp_to_datestr(row["timestamp"]);
+    if ("items_per_min" in row) {
+      row["speed"] = calc_speed_in_unit(
+        row["items_per_min"],
+        total_speed_time_unit
+      );
+    }
+    data_table.push(row);
+  }
+  table.setData(data_table);
+}
+
 // Export functions, needed for Jest unittests
 // Using this hack it works for both, jest and browser.
 // from https://stackoverflow.com/questions/66349868/jest-unit-testing-module-export-error-in-browser-console
@@ -148,4 +203,6 @@ module.exports = {
   linreg,
   calc_row_new_delta,
   sort_data,
+  table_create,
+  table_update,
 };

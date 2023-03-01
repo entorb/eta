@@ -75,57 +75,7 @@ let total_speed_time_unit = "Minute"; // Minute/Hour/Day
 
 // Table
 
-const table = new Tabulator("#div_table", {
-  height: "100%",
-  // data: data,
-  layout: "fitDataStretch", // fit columns to width of table (optional)
-  selectable: true,
-  columns: [
-    {
-      title: "Date",
-      field: "date_str",
-      sorter: "datetime",
-      headerSort: false,
-      hozAlign: "center",
-    }, // datetime sorting requires luxon.js library
-    { title: "Items", field: "items", headerSort: false, hozAlign: "center" },
-    {
-      title: "Remaining",
-      field: "remaining",
-      headerSort: false,
-      hozAlign: "center",
-    },
-    { title: "Speed", field: "speed", headerSort: false, hozAlign: "center" },
-    { title: "ETA", field: "eta_str", headerSort: false, hozAlign: "left" },
-  ],
-});
-
-function table_update() {
-  console.log("fnc table_update()");
-  // IDEA: Instead of using this function, the setting reactiveData:true and data:data could be used, but this would require the calculated columns to be present in the data array. This in turn would be problematic for changes of the unit speed...
-  // IDEA: second function for just adding a row instead of recreating the table each time?
-  const data_table = [];
-  // BUG: this is only updated when the second time called
-  table.updateColumnDefinition("speed", {
-    title: "Items/" + total_speed_time_unit,
-  });
-
-  for (let i = 0; i < data.length; i++) {
-    // bad: const row = data[i];
-    // clone / copy the original row
-    // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
-    const row = Object.assign({}, data[i]);
-    row["date_str"] = timestamp_to_datestr(row["timestamp"]);
-    if ("items_per_min" in row) {
-      row["speed"] = calc_speed_in_unit(
-        row["items_per_min"],
-        total_speed_time_unit
-      );
-    }
-    data_table.push(row);
-  }
-  table.setData(data_table);
-}
+const table = table_create();
 
 // eslint-disable-next-line no-unused-vars
 function table_delete_rows() {
@@ -408,7 +358,7 @@ function update_displays() {
   console.log("fnc update_displays()");
   if (data.length > 0) {
     update_start_and_pct();
-    table_update();
+    table_update(data, total_speed_time_unit);
     if (data.length >= 2) {
       update_total_eta_and_speed();
       chart_update();
@@ -559,7 +509,7 @@ function reset() {
   html_text_runtime.innerHTML = "&nbsp;";
   html_text_pct.innerHTML = "&nbsp;";
   html_text_speed.innerHTML = "&nbsp;";
-  table_update();
+  table_update(data, total_speed_time_unit);
   chart_update();
 }
 
