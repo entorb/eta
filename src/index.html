@@ -8,7 +8,7 @@ TODOs
 -->
 
 <head>
-    <title>ETA - estimated time of arrival</title>
+    <title>ETA - Estimated Time of Arrival</title>
     <meta charset="utf-8">
     <meta name="author" content="Dr. Torben Menke">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -45,9 +45,9 @@ TODOs
 
 <body>
 
-    <h1>ETA - estimated time of arrival</h1>
+    <h1>ETA - Estimated Time of Arrival</h1>
     <div id="text_intro">
-        <a id="a_hide_intro" title="Click to hide intro text" href="#" onclick="hide_intro();return false;">hide intro</a>
+        <a id="a_hide_intro" title="Click to hide intro text" href="#" onclick="action_hide_intro();return false;">hide intro</a>
 
         <p>This tool answers the question "How long the fuck do I have to wait?!"</p>
 
@@ -88,7 +88,7 @@ TODOs
         <tr>
             <td>Items</td>
             <td><input id="input_items" type="text" inputmode="numeric" pattern="[0-9]*"></td>
-            <td><button id="btn_add" style="width:4em" onclick="add()">Add</button></td>
+            <td><button id="btn_add" style="width:4em" onclick="action_add_items()">Add</button></td>
         </tr>
     </table>
     <table>
@@ -114,7 +114,7 @@ TODOs
     </table>
     <!-- Tabulator table -->
     <div id="div_table" style="width: 900px;height:400px;"></div>
-    <button id="btn_table_row_delete" onclick="table_delete_rows()">Delete selected rows</button>&nbsp;<button id="btn_reset" onclick="reset()">Delete All</button>
+    <button id="btn_table_row_delete" onclick="action_table_delete_rows()">Delete selected rows</button>&nbsp;<button id="btn_reset" onclick="reset()">Delete All</button>
     <!-- eCharts chart -->
     <div id="div_chart" style="width: 900px;height:400px;"></div>
     <div>Right axis: <select id="sel_chart_y2" onchange="chart_update()">
@@ -124,19 +124,31 @@ TODOs
     </div>
 
     <h2>Advanced Features</h2>
+    <table>
+        <tr>
+            <td>Enter Remaining</td>
+            <td><input id="input_remaining" type="text" inputmode="numeric" pattern="[0-9]*"></td>
+            <td><button id="btn_add_remaining" style="width:4em" onclick="action_add_remaining()">Add</button></td>
+        </tr>
+        <tr>
+            <td>Enter Delta</td>
+            <td><input id="input_delta" type="text" inputmode="numeric" pattern="[0-9]*"></td>
+            <td><button id="btn_add_delta" style="width:4em" onclick="action_add_delta()">Add</button></td>
+        </tr>
+    </table>
 
-    <h3>Add historical data</h3>
+    <h3>Add Historical Data</h3>
     <input id="input_hist_datetime" type="datetime-local">
     <input id="input_hist_items" type="text" inputmode="numeric" pattern="[0-9]*">
-    <button id="btn_hist_add" style="width:4em" onclick="add_hist()">Add</button>
+    <button id="btn_hist_add" style="width:4em" onclick="action_add_hist()">Add</button>
 
     <h3>Export and Import</h3>
     <a id="a_download_csv" style="display:none"></a>
-    <button id="download_csv" onclick="download_data_csv()">Export CSV</button>,
+    <button id="download_csv" onclick="action_download_data_csv()">Export CSV</button>,
     <a id="a_download_json" style="display:none"></a>
-    <button id="download_data" onclick="download_data_json()">Export JSON</button> and
+    <button id="download_data" onclick="action_download_data_json()">Export JSON</button> and
     <b>Import JSON</b>:
-    <input id="upload_data" type="file" onchange="upload_data_json(this)">
+    <input id="upload_data" type="file" onchange="action_upload_data_json(this)">
     <!-- footer -->
     <hr>
     <a href="/">Home</a> - <a href="/contact.php?origin=ETA">Contact</a> - <a href="/impressum.php">Impressum</a>

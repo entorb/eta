@@ -25,17 +25,22 @@ use jest for unit tests
 download CSV data
 runtime: dynamically update as well
 set target: allow change of target and trigger recalc of remaining items for all rows
+100% test coverage for helper.js
+enter delta
+enter remaining
+prevent entering non-numbers
 
 TODO/IDEAS
-100% test coverage for helper.js
 chart: choose to display remaining instead of items
 tabulator: use global data, and update column speed name upon switching unit
 echarts: use global data, and update speed unit
 */
 
 // html elements
-const html_input_items = document.getElementById("input_items");
 const html_input_target = document.getElementById("input_target");
+const html_input_items = document.getElementById("input_items");
+const html_input_remaining = document.getElementById("input_remaining");
+const html_input_delta = document.getElementById("input_delta");
 const html_div_chart = document.getElementById("div_chart");
 const html_text_eta = document.getElementById("text_eta");
 const html_text_remaining = document.getElementById("text_remaining");
@@ -78,8 +83,8 @@ let total_speed_time_unit = "Minute"; // Minute/Hour/Day
 const table = table_create();
 
 // eslint-disable-next-line no-unused-vars
-function table_delete_rows() {
-  console.log("fnc table_delete_rows()");
+function action_table_delete_rows() {
+  console.log("fnc action_table_delete_rows()");
   // const selectedRows = table.getSelectedRows();
   const selectedData = table.getSelectedData();
   if (selectedData.length === data.length) {
@@ -377,17 +382,29 @@ html_input_target.addEventListener("keypress", function (event) {
 html_input_items.addEventListener("keypress", function (event) {
   if (event.key === "Enter") {
     event.preventDefault();
-    add();
+    action_add_items();
+  }
+});
+html_input_remaining.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    action_add_remaining();
+  }
+});
+html_input_delta.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    action_add_delta();
   }
 });
 html_input_hist_items.addEventListener("keypress", function (event) {
   if (event.key === "Enter") {
     event.preventDefault();
-    add_hist();
+    action_add_hist();
   }
 });
 
-// FE-triggered functions
+// user-triggered actions/functions
 
 function set_target() {
   console.log("fnc set_target()");
@@ -444,53 +461,114 @@ function set_target() {
   }
 }
 
-function add() {
-  console.log("fnc add()");
-  if ("target" in settings) {
-    // console.log("target: " + settings);
-  } else {
-    console.log("setting target prio to add items value");
-    set_target();
-  }
-  if (!html_input_items.value) {
-    console.log("items empty");
+function add_items(items) {
+  console.log("fnc add_items()");
+  const target = settings["target"];
+  // checks regarding target
+  if (items < 0) {
+    alert("New entry (" + items + ") must be positive.");
     return;
   }
+  if (target > 0 && items > target) {
+    alert("New entry (" + items + ") must not exceed target (" + target + ").");
+    return;
+  }
+  // checks regarding last row
+  // data already present before we add the new row
+  if (data.length >= 1) {
+    const row_last = data.slice(-1)[0];
+    // in mode=countdown, we only except decreasing values
+    if (target === 0 && items >= row_last["items"]) {
+      alert(
+        "New entry (" +
+          items +
+          ") must be < previous entry (" +
+          row_last["items"] +
+          ") in countdown mode."
+      );
+      return;
+    }
+    // in mode=countup, we only except increasing values
+    if (target > 0 && items <= row_last["items"]) {
+      alert(
+        "New entry (" +
+          items +
+          ") must be > previous entry (" +
+          row_last["items"] +
+          ") in countup mode."
+      );
+      return;
+    }
+  }
+
+  // append row
   const d = new Date();
-  const items = Number(html_input_items.value.replace(",", "."));
-  const target = settings["target"];
   const timestamp = d.getTime();
   let row_new = {
     timestamp: timestamp,
     items: items,
     remaining: calc_remaining_items(items, settings["target"]),
   };
-  // data already present before we add the new row
+
   if (data.length >= 1) {
     const row_last = data.slice(-1)[0];
-
-    // in mode=countdown, we only except decreasing values
-    if (target === 0 && items >= row_last["items"]) {
-      alert("New entry must be < previous entry in countdown mode.");
-      return;
-    }
-    // in mode=countup, we only except increasing values
-    if (target > 0 && items <= row_last["items"]) {
-      alert("New entry must be > previous entry in countup mode.");
-      return;
-    }
-    // in mode=countup, we do not except values > target
-    if (target > 0 && items > target) {
-      alert("New entry must not exceed target.");
-      return;
-    }
     row_new = calc_row_new_delta(row_new, row_last);
   }
-
   data.push(row_new);
   window.localStorage.setItem("eta_data", JSON.stringify(data));
   update_displays();
+}
+
+function add_read_field_and_prepare(html_input) {
+  console.log("fnc add_read_field_and_prepare()");
+  if (!html_input.value) {
+    console.log("value empty");
+    return;
+  }
+  if (!("target" in settings)) {
+    console.log("setting target prio to adding");
+    set_target();
+  }
+  const value_str = html_input.value.replace(",", ".").replace(" ", "");
+  if (!isNumeric(value_str)) {
+    return 0;
+  }
+  return Number(value_str);
+}
+
+function action_add_items() {
+  console.log("fnc action_add_items()");
+  const items = add_read_field_and_prepare(html_input_items);
+  add_items(items);
   html_input_items.value = "";
+}
+
+function action_add_remaining() {
+  console.log("fnc action_add_remaining()");
+  const remaining = add_read_field_and_prepare(html_input_remaining);
+  if (settings["target"] === 0) {
+    add_items(remaining);
+  } else {
+    add_items(settings["target"] - remaining);
+  }
+  html_input_remaining.value = "";
+}
+
+function action_add_delta() {
+  console.log("fnc action_add_delta()");
+  if (data.length === 0) {
+    console.log("data empty, nothing to do");
+    return;
+  }
+  const delta = add_read_field_and_prepare(html_input_delta);
+  const row_last = data.slice(-1)[0];
+
+  if (settings["target"] === 0) {
+    add_items(row_last["items"] - delta);
+  } else {
+    add_items(row_last["items"] + delta);
+  }
+  html_input_delta.value = "";
 }
 
 function reset() {
@@ -514,8 +592,8 @@ function reset() {
 }
 
 // eslint-disable-next-line no-unused-vars
-function download_data_csv() {
-  console.log("fnc download_data_csv()");
+function action_download_data_csv() {
+  console.log("fnc action_download_data_csv()");
   let csvContent = "data:text/csv;charset=utf-8," + "Date\tItems\tItems/Min\n";
   data.forEach(function (row) {
     csvContent +=
@@ -532,8 +610,8 @@ function download_data_csv() {
 }
 
 // eslint-disable-next-line no-unused-vars
-function download_data_json() {
-  console.log("fnc download_data_json()");
+function action_download_data_json() {
+  console.log("fnc action_download_data_json()");
   const dataStr =
     "data:text/json;charset=utf-8," +
     encodeURIComponent(JSON.stringify([settings, data]));
@@ -543,8 +621,8 @@ function download_data_json() {
 }
 
 // eslint-disable-next-line no-unused-vars
-function upload_data_json(input) {
-  console.log("fnc upload_data_json()");
+function action_upload_data_json(input) {
+  console.log("fnc action_upload_data_json()");
   // from https://javascript.info/file
   const file = input.files[0];
   const reader = new FileReader();
@@ -565,15 +643,15 @@ function upload_data_json(input) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function hide_intro() {
-  console.log("fnc hide_intro()");
+function action_hide_intro() {
+  console.log("fnc action_hide_intro()");
   // from https://stackoverflow.com/questions/1070760/javascript-href-vs-onclick-for-callback-function-on-hyperlink
   const html_text_intro = document.getElementById("text_intro");
   html_text_intro.remove();
 }
 
-function add_hist() {
-  console.log("fnc add_hist()");
+function action_add_hist() {
+  console.log("fnc action_add_hist()");
   if (!("target" in settings)) {
     alert("set target first");
     return;

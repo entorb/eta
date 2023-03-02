@@ -80,6 +80,27 @@ describe("Testing calc_remaining_items()", () => {
   });
 });
 
+// describe("Testing isNumeric()", () => {
+//   let val = "";
+//   const { isNumeric } = require("./helper");
+//   val = "10";
+//   test("test '" + val + "'", () => {
+//     expect(isNumeric(val)).toBe(true);
+//   });
+//   val = "1.1";
+//   test("test '" + val + "'", () => {
+//     expect(isNumeric(val)).toBe(true);
+//   });
+//   val = "10x";
+//   test("test '" + val + "'", () => {
+//     expect(isNumeric(val)).toBe(false);
+//   });
+//   val = "1,1";
+//   test("test '" + val + "'", () => {
+//     expect(isNumeric(val)).toBe(false);
+//   });
+// });
+
 describe("Testing linreg()", () => {
   const { linreg } = require("./helper");
   const x = [

@@ -59,6 +59,15 @@ function calc_remaining_items(items, target) {
 }
 
 // math helpers
+function isNumeric(str) {
+  // from https://stackoverflow.com/questions/175739/how-can-i-check-if-a-string-is-a-valid-number
+  if (typeof str != "string") return false; // we only process strings!
+  return (
+    !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+    !isNaN(parseFloat(str))
+    // ...and ensure strings of whitespace fail
+  );
+}
 
 function linreg(x, y) {
   // from https://oliverjumpertz.com/simple-linear-regression-theory-math-and-implementation-in-javascript/
@@ -200,6 +209,7 @@ module.exports = {
   calc_speed_in_unit,
   timestamp_to_datestr,
   calc_remaining_items,
+  isNumeric,
   linreg,
   calc_row_new_delta,
   sort_data,
