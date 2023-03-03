@@ -80,26 +80,25 @@ describe("Testing calc_remaining_items()", () => {
   });
 });
 
-// describe("Testing isNumeric()", () => {
-//   let val = "";
-//   const { isNumeric } = require("./helper");
-//   val = "10";
-//   test("test '" + val + "'", () => {
-//     expect(isNumeric(val)).toBe(true);
-//   });
-//   val = "1.1";
-//   test("test '" + val + "'", () => {
-//     expect(isNumeric(val)).toBe(true);
-//   });
-//   val = "10x";
-//   test("test '" + val + "'", () => {
-//     expect(isNumeric(val)).toBe(false);
-//   });
-//   val = "1,1";
-//   test("test '" + val + "'", () => {
-//     expect(isNumeric(val)).toBe(false);
-//   });
-// });
+describe("isNumeric()", () => {
+  // from https://dev.to/bgord/simplify-repetitive-jest-test-cases-with-test-each-310m
+  const cases = [
+    ["10", true],
+    ["asdf", false],
+    ["1.1", true],
+    ["1,1", false],
+    ["10x", false],
+    [" 10 ", true], // this is surprising
+  ];
+  const { isNumeric } = require("./helper");
+  test.each(cases)(
+    "given '%p' as argument, returns %p",
+    (firstArg, expectedResult) => {
+      const result = isNumeric(firstArg);
+      expect(result).toEqual(expectedResult);
+    }
+  );
+});
 
 describe("Testing linreg()", () => {
   const { linreg } = require("./helper");
