@@ -83,7 +83,6 @@ TODOs
             <td>Target</td>
             <td><input id="input_target" type="text" inputmode="numeric" pattern="[0-9]*"></td>
             <td></td>
-            <!-- <button id="btn_set_target" style="width:4em" onclick="set_target()">Set</button> -->
         </tr>
         <tr>
             <td>Items</td>
@@ -114,10 +113,10 @@ TODOs
     </table>
     <!-- Tabulator table -->
     <div id="div_table" style="width: 900px;height:400px;"></div>
-    <button id="btn_table_row_delete" onclick="action_table_delete_rows()">Delete selected rows</button>&nbsp;<button id="btn_reset" onclick="reset()">Delete All</button>
+    <button id="btn_table_row_delete" onclick="action_table_delete_rows()">Delete selected rows</button>&nbsp;<button id="btn_reset" onclick="action_reset()">Delete All</button>
     <!-- eCharts chart -->
     <div id="div_chart" style="width: 900px;height:400px;"></div>
-    <div>Right axis: <select id="sel_chart_y2" onchange="chart_update()">
+    <div>Right axis: <select id="sel_chart_y2" onchange="action_chart_series_selection_changed()">
             <option value="eta">ETA</option>
             <option value="speed">Speed</option>
         </select>

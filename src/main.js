@@ -82,31 +82,6 @@ let total_speed_time_unit = "Minute"; // Minute/Hour/Day
 
 const table = table_create();
 
-// eslint-disable-next-line no-unused-vars
-function action_table_delete_rows() {
-  console.log("fnc action_table_delete_rows()");
-  // const selectedRows = table.getSelectedRows();
-  const selectedData = table.getSelectedData();
-  if (selectedData.length === data.length) {
-    // delete all via reset()
-    reset();
-    console.log("deleting all table data");
-    return;
-  }
-  for (let i = 0; i < selectedData.length; i++) {
-    const row = selectedData[i];
-    const timestamp_to_delete = row["timestamp"];
-    for (let j = data.length - 1; j >= 0; --j) {
-      if (data[j]["timestamp"] === timestamp_to_delete) {
-        data.splice(j, 1);
-      }
-    }
-  }
-  // TODO: sort not needed, but was too lazy to add another function
-  data = sort_data(data);
-  update_displays();
-}
-
 // Chart
 
 const chart = echarts.init(html_div_chart);
@@ -371,40 +346,27 @@ function update_displays() {
   }
 }
 
-// FE EventListener
+function reset() {
+  console.log("fnc reset()");
+  clearInterval(interval_auto_refresh);
+  data = [];
+  settings = {};
+  total_items_per_min = 0;
+  total_speed_time_unit = "Minute";
+  // window.localStorage.setItem("eta_data", JSON.stringify(data));
+  window.localStorage.removeItem("eta_data");
+  window.localStorage.removeItem("eta_settings");
+  html_text_eta.innerHTML = "&nbsp;";
+  html_text_remaining.innerHTML = "&nbsp;";
+  html_text_start.innerHTML = "&nbsp;";
+  html_text_runtime.innerHTML = "&nbsp;";
+  html_text_pct.innerHTML = "&nbsp;";
+  html_text_speed.innerHTML = "&nbsp;";
+  table_update(data, total_speed_time_unit);
+  chart_update();
+}
 
-html_input_target.addEventListener("keypress", function (event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    set_target();
-  }
-});
-html_input_items.addEventListener("keypress", function (event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    action_add_items();
-  }
-});
-html_input_remaining.addEventListener("keypress", function (event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    action_add_remaining();
-  }
-});
-html_input_delta.addEventListener("keypress", function (event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    action_add_delta();
-  }
-});
-html_input_hist_items.addEventListener("keypress", function (event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    action_add_hist();
-  }
-});
-
-// user-triggered actions/functions
+// set data
 
 function set_target() {
   console.log("fnc set_target()");
@@ -536,6 +498,46 @@ function add_read_field_and_prepare(html_input) {
   return Number(value_str);
 }
 
+// FE EventListener
+
+html_input_target.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    action_set_target();
+  }
+});
+html_input_items.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    action_add_items();
+  }
+});
+html_input_remaining.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    action_add_remaining();
+  }
+});
+html_input_delta.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    action_add_delta();
+  }
+});
+html_input_hist_items.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    action_add_hist();
+  }
+});
+
+// user-triggered actions/functions
+
+function action_set_target() {
+  console.log("fnc action_set_target()");
+  set_target();
+}
+
 function action_add_items() {
   console.log("fnc action_add_items()");
   const items = add_read_field_and_prepare(html_input_items);
@@ -571,23 +573,40 @@ function action_add_delta() {
   html_input_delta.value = "";
 }
 
-function reset() {
-  console.log("fnc reset()");
-  clearInterval(interval_auto_refresh);
-  data = [];
-  settings = {};
-  total_items_per_min = 0;
-  total_speed_time_unit = "Minute";
-  // window.localStorage.setItem("eta_data", JSON.stringify(data));
-  window.localStorage.removeItem("eta_data");
-  window.localStorage.removeItem("eta_settings");
-  html_text_eta.innerHTML = "&nbsp;";
-  html_text_remaining.innerHTML = "&nbsp;";
-  html_text_start.innerHTML = "&nbsp;";
-  html_text_runtime.innerHTML = "&nbsp;";
-  html_text_pct.innerHTML = "&nbsp;";
-  html_text_speed.innerHTML = "&nbsp;";
-  table_update(data, total_speed_time_unit);
+// eslint-disable-next-line no-unused-vars
+function action_reset() {
+  console.log("fnc action_reset()");
+  reset();
+}
+
+// eslint-disable-next-line no-unused-vars
+function action_table_delete_rows() {
+  console.log("fnc action_table_delete_rows()");
+  // const selectedRows = table.getSelectedRows();
+  const selectedData = table.getSelectedData();
+  if (selectedData.length === data.length) {
+    // delete all via reset()
+    reset();
+    console.log("deleting all table data");
+    return;
+  }
+  for (let i = 0; i < selectedData.length; i++) {
+    const row = selectedData[i];
+    const timestamp_to_delete = row["timestamp"];
+    for (let j = data.length - 1; j >= 0; --j) {
+      if (data[j]["timestamp"] === timestamp_to_delete) {
+        data.splice(j, 1);
+      }
+    }
+  }
+  // TODO: sort not needed, but was too lazy to add another function
+  data = sort_data(data);
+  update_displays();
+}
+
+// eslint-disable-next-line no-unused-vars
+function action_chart_series_selection_changed() {
+  console.log("fnc action_chart_series_selection_changed()");
   chart_update();
 }
 
