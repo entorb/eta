@@ -292,6 +292,10 @@ function set_target() {
 
 function add_items(items) {
   console.log("fnc add_items()");
+  if (!("target" in settings)) {
+    set_target();
+  }
+
   const target = settings["target"];
   // checks regarding target
   if (items < 0) {
@@ -351,8 +355,8 @@ function add_items(items) {
 function add_read_field_and_prepare(html_input) {
   console.log("fnc add_read_field_and_prepare()");
   if (!html_input.value) {
-    console.log("value empty");
-    return;
+    console.log("value empty, returning 0");
+    return 0;
   }
   if (!("target" in settings)) {
     console.log("setting target prio to adding");
