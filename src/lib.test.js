@@ -7,17 +7,57 @@ document.body.innerHTML =
 // eslint-disable-next-line no-unused-vars
 const data = [
   {
-    timestamp: 1677554364952,
-    items: 2,
-    remaining: 8,
-    items_per_min: 8.570204256534781,
-    eta_ts: 1677554420960,
-    eta_str: "28.2.2023 04:20:20",
+    timestamp: 1677855852992,
+    items: 0,
+    remaining: 16,
   },
   {
-    timestamp: 1677554357951,
-    items: 1,
-    remaining: 9,
+    timestamp: 1677856017416,
+    items: 6,
+    remaining: 10,
+    items_per_min: 2.1894613924974458,
+    eta_ts: 1677856291456,
+    eta_str: "3.3.2023 16:11:31",
+  },
+  {
+    timestamp: 1677856215328,
+    items: 8,
+    remaining: 8,
+    items_per_min: 0.6063300860988722,
+    eta_ts: 1677857006976,
+    eta_str: "3.3.2023 16:23:26",
+  },
+  {
+    timestamp: 1677856352827,
+    items: 10,
+    remaining: 6,
+    items_per_min: 0.8727336198808718,
+    eta_ts: 1677856765324,
+    eta_str: "3.3.2023 16:19:25",
+  },
+  {
+    timestamp: 1677856433998,
+    items: 12,
+    remaining: 4,
+    items_per_min: 1.4783604982074878,
+    eta_ts: 1677856596340,
+    eta_str: "3.3.2023 16:16:36",
+  },
+  {
+    timestamp: 1677856479639,
+    items: 14,
+    remaining: 2,
+    items_per_min: 2.629214960233124,
+    eta_ts: 1677856525280,
+    eta_str: "3.3.2023 16:15:25",
+  },
+  {
+    timestamp: 1677856527322,
+    items: 16,
+    remaining: 0,
+    items_per_min: 2.5166201790994696,
+    eta_ts: 1677856527322,
+    eta_str: "3.3.2023 16:15:27",
   },
 ];
 
@@ -28,7 +68,35 @@ describe("Testing table creation", () => {
     table = table_create();
     expect(table).toBeDefined();
     total_speed_time_unit = "Minute";
-    // table_update(data, total_speed_time_unit);
-    // return expect(table_update()).rejects.toEqual(new Error());
+    // seems not to contribute to code coverage
+    table.on("tableBuilt", function () {
+      table_update(data, total_speed_time_unit);
+    });
   });
 });
+
+describe("Testing table creation", () => {
+  // eslint-disable-next-line no-unused-vars
+  const { table_create, table_update } = require("./helper");
+  test("create", () => {
+    table = table_create();
+    expect(table).toBeDefined();
+    total_speed_time_unit = "Minute";
+    // seems not to contribute to code coverage
+    table.on("tableBuilt", function () {
+      table_update(table, data, total_speed_time_unit);
+    });
+  });
+});
+
+// seems not to work in jest
+// describe("Testing echarts", () => {
+//   // eslint-disable-next-line no-unused-vars
+//   const { chart_create, chart_update } = require("./helper");
+//   const html_div_chart = document.getElementById("div_chart");
+
+//   test("create", () => {
+//     chart = chart_create(html_div_chart);
+//     expect(chart).toBeDefined();
+//   });
+// });
