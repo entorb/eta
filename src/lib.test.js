@@ -1,8 +1,9 @@
 /* eslint-disable camelcase */
 global.Tabulator = require("./lib/tabulator-5.4.min");
-// global.echarts = require("./lib/echarts-5.4.1.min");
-document.body.innerHTML = '<div id ="div_table"></div>';
-// <div id ="div_chart"></div>
+global.echarts = require("./lib/echarts-5.4.1.min");
+document.body.innerHTML =
+  '<div id ="div_table"></div><div id ="div_chart"></div>';
+
 // eslint-disable-next-line no-unused-vars
 const data = [
   {

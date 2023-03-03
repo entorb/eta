@@ -84,154 +84,9 @@ const table = table_create();
 
 // Chart
 
-const chart = echarts.init(html_div_chart);
-// https://echarts.apache.org/en/option.html#color
-// const chart_colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
-chart.setOption({
-  // title: { text: 'Items per Minute' },
-  tooltip: {},
-  legend: {},
-  grid: {
-    // define margins
-    containLabel: false,
-    left: 50,
-    bottom: 20,
-    top: 30,
-    right: 150,
-  },
-});
+const chart = chart_create(html_div_chart, total_speed_time_unit);
 
-function chart_update() {
-  console.log("fnc chart_update()");
-  const chart_colors = ["#3ba272", "#5470c6", "#91cc75"];
-  const data_echarts_items = [];
-  const data_echarts_speed = [];
-  const data_echarts_eta = [];
-  const y2_series = html_sel_chart_y2.value;
-
-  // populate data arrays
-  // TODO: only calc the ones need for the selected y2_series
-  for (let i = 0; i < data.length; i++) {
-    // clone, see update_table
-    const row = Object.assign({}, data[i]);
-    data_echarts_items.push([new Date(row["timestamp"]), row["items"]]);
-    if ("items_per_min" in row) {
-      data_echarts_speed.push([
-        new Date(row["timestamp"]),
-        calc_speed_in_unit(row["items_per_min"], total_speed_time_unit),
-      ]);
-    }
-    if ("items_per_min" in row) {
-      data_echarts_eta.push([
-        new Date(row["timestamp"]),
-        new Date(row["eta_ts"]),
-      ]);
-    }
-  }
-
-  // generate settings per Axis
-  // TODO: only generate the ones need for the selected y2_series
-  const yAxis_items = {
-    name: "Items",
-    position: "left",
-    type: "value",
-    nameTextStyle: { color: chart_colors[0] },
-    axisLabel: {
-      textStyle: {
-        color: chart_colors[0],
-      },
-    },
-  };
-
-  const yAxis2_common = {
-    position: "right",
-    nameTextStyle: { color: chart_colors[1] },
-    axisLabel: { textStyle: { color: chart_colors[1] } },
-    splitLine: { show: false }, // no grid line
-  };
-
-  const yAxis2_speed = {
-    ...yAxis2_common,
-    ...{
-      name: "Items/" + total_speed_time_unit,
-      type: "value",
-    },
-  };
-
-  const yAxis2_eta = {
-    ...yAxis2_common,
-    ...{
-      name: "ETA",
-      type: "time",
-    },
-  };
-
-  const series_common = {
-    type: "line",
-    smooth: true,
-    symbolSize: 10,
-    silent: true,
-    animation: false,
-  };
-
-  const series_items = {
-    ...series_common,
-    ...{
-      yAxisIndex: 0,
-      data: data_echarts_items,
-      color: chart_colors[0],
-      areaStyle: { opacity: 0.5 },
-    },
-  };
-
-  const series_speed = {
-    ...series_common,
-    ...{
-      yAxisIndex: 1,
-      color: chart_colors[1],
-      data: data_echarts_speed,
-      markLine: {
-        symbol: "none",
-        label: { show: false },
-        silent: true,
-        animation: true,
-        data: [{ yAxis: total_items_per_min }],
-      },
-    },
-  };
-
-  const series_eta = {
-    ...series_common,
-    ...{
-      yAxisIndex: 1,
-      color: chart_colors[1],
-      data: data_echarts_eta,
-      markLine: {
-        symbol: "none",
-        label: { show: false },
-        silent: true,
-        animation: true,
-        data: [{ yAxis: new Date(total_timestamp_eta) }],
-      },
-    },
-  };
-
-  if (y2_series === "speed") {
-    chart.setOption({
-      series: [series_items, series_speed],
-      xAxis: { type: "time" },
-      yAxis: [yAxis_items, yAxis2_speed],
-    });
-  } else if (y2_series === "eta") {
-    chart.setOption({
-      series: [series_items, series_eta],
-      xAxis: { type: "time" },
-      yAxis: [yAxis_items, yAxis2_eta],
-    });
-  }
-}
-
-// update functions
+// Update functions
 
 function update_total_eta_and_speed() {
   console.log("fnc update_total_eta_and_speed()");
@@ -338,10 +193,16 @@ function update_displays() {
   console.log("fnc update_displays()");
   if (data.length > 0) {
     update_start_and_pct();
-    table_update(data, total_speed_time_unit);
+    table_update(table, data, total_speed_time_unit);
     if (data.length >= 2) {
       update_total_eta_and_speed();
-      chart_update();
+      chart_update(
+        chart,
+        html_sel_chart_y2.value,
+        total_speed_time_unit,
+        total_items_per_min,
+        total_timestamp_eta
+      );
     }
   }
 }
@@ -362,8 +223,14 @@ function reset() {
   html_text_runtime.innerHTML = "&nbsp;";
   html_text_pct.innerHTML = "&nbsp;";
   html_text_speed.innerHTML = "&nbsp;";
-  table_update(data, total_speed_time_unit);
-  chart_update();
+  table_update(table, data, total_speed_time_unit);
+  chart_update(
+    chart,
+    html_sel_chart_y2.value,
+    total_speed_time_unit,
+    total_items_per_min,
+    total_timestamp_eta
+  );
 }
 
 // set data
@@ -607,7 +474,13 @@ function action_table_delete_rows() {
 // eslint-disable-next-line no-unused-vars
 function action_chart_series_selection_changed() {
   console.log("fnc action_chart_series_selection_changed()");
-  chart_update();
+  chart_update(
+    chart,
+    html_sel_chart_y2.value,
+    total_speed_time_unit,
+    total_items_per_min,
+    total_timestamp_eta
+  );
 }
 
 // eslint-disable-next-line no-unused-vars
