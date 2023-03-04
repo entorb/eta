@@ -2,4 +2,5 @@
 coverage/
 node_modules/
 
+tmp-dl/
 src/lib/
