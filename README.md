@@ -5,7 +5,8 @@ Estimates remaining waiting time, hosted at https://entorb.net/eta/
 ## Use cases
 * Standing in a queue
 * Waiting for a process to finish
-* Estimate when you finish your current book
+* Book reading finish time
+* Exercising (homework or sport)
 
 ## Key features
 * Mode countdown (target = 0)
