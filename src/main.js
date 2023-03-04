@@ -451,7 +451,8 @@ function action_add_delta() {
   } else {
     add_items(row_last["items"] + delta);
   }
-  html_input_delta.value = "";
+  // keep delta input populated, to allow for easy +1
+  // html_input_delta.value = "";
 }
 
 // eslint-disable-next-line no-unused-vars
