@@ -183,3 +183,21 @@ describe("sort_data()", () => {
     expect(sort_data([])).toEqual([]);
   });
 });
+
+describe("read_html_input_number()", () => {
+  const { read_html_input_number } = require("./helper");
+  document.body.innerHTML =
+    '<input id="input_items" type="text" inputmode="numeric" pattern="[0-9]*"></input>';
+  const html_input_items = document.getElementById("input_items");
+  const cases = [
+    ["1", 1],
+    ["", 0],
+    ["asdf", 0],
+    ["1.1", 1.1],
+    ["1,1", 1.1],
+  ];
+  test.each(cases)("given '%p' it shall return %p", (arg1, expectedResult) => {
+    html_input_items.value = arg1;
+    expect(read_html_input_number(html_input_items)).toEqual(expectedResult);
+  });
+});

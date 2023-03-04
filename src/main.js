@@ -173,18 +173,18 @@ function update_start_and_pct() {
   const row_first = data[0];
   const row_last = data.slice(-1)[0];
   if (settings["target"] === 0) {
-    // remaining is neg for all rows
+    // calc via remaining last / remaining first
     percent =
       Math.round(
-        10 * (100 - (100 * row_last["remaining"]) / row_first["remaining"])
+        10 * 100 * (1 - row_last["remaining"] / row_first["remaining"])
       ) / 10;
   } else {
-    // remaining is pos for all rows
+    // calc via last_items / total_items
     percent =
       Math.round(
         10 *
-          ((100 * row_last["items"]) /
-            (row_first["items"] + row_first["remaining"]))
+          100 *
+          (row_last["items"] / (row_first["items"] + row_first["remaining"]))
       ) / 10;
   }
   html_text_pct.innerHTML = percent + "%";
@@ -281,7 +281,7 @@ function set_target() {
     for (let i = 1; i < data.length; i++) {
       data[i] = calc_row_new_delta(data[i], data[i - 1]);
     }
-    update_displays();
+    update_displays(); // in case data is already present
   }
 
   if (settings["target"] === 0) {
@@ -296,7 +296,6 @@ function add_items(items) {
   if (!("target" in settings)) {
     set_target();
   }
-
   const target = settings["target"];
   // checks regarding target
   if (items < 0) {
@@ -341,7 +340,7 @@ function add_items(items) {
   let row_new = {
     timestamp: timestamp,
     items: items,
-    remaining: calc_remaining_items(items, settings["target"]),
+    remaining: calc_remaining_items(items, target), // remaining shall always be > 0
   };
 
   if (data.length >= 1) {
@@ -351,23 +350,6 @@ function add_items(items) {
   data.push(row_new);
   window.localStorage.setItem("eta_data", JSON.stringify(data));
   update_displays();
-}
-
-function add_read_field_and_prepare(html_input) {
-  console.log("fnc add_read_field_and_prepare()");
-  if (!html_input.value) {
-    console.log("value empty, returning 0");
-    return 0;
-  }
-  if (!("target" in settings)) {
-    console.log("setting target prio to adding");
-    set_target();
-  }
-  const value_str = html_input.value.replace(",", ".").replace(" ", "");
-  if (!isNumeric(value_str)) {
-    return 0;
-  }
-  return Number(value_str);
 }
 
 // FE EventListener
@@ -412,14 +394,14 @@ function action_set_target() {
 
 function action_add_items() {
   console.log("fnc action_add_items()");
-  const items = add_read_field_and_prepare(html_input_items);
+  const items = read_html_input_number(html_input_items);
   add_items(items);
   html_input_items.value = "";
 }
 
 function action_add_remaining() {
   console.log("fnc action_add_remaining()");
-  const remaining = add_read_field_and_prepare(html_input_remaining);
+  const remaining = read_html_input_number(html_input_remaining);
   if (settings["target"] === 0) {
     add_items(remaining);
   } else {
@@ -434,7 +416,7 @@ function action_add_delta() {
     console.log("data empty, nothing to do");
     return;
   }
-  const delta = add_read_field_and_prepare(html_input_delta);
+  const delta = read_html_input_number(html_input_delta);
   const row_last = data.slice(-1)[0];
 
   if (settings["target"] === 0) {

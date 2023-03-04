@@ -147,6 +147,21 @@ function sort_data(data) {
   return data;
 }
 
+// interactions with HTML elements
+
+function read_html_input_number(html_input) {
+  console.log("fnc read_html_input_number()");
+  if (!html_input.value) {
+    console.log("value empty, returning 0");
+    return 0;
+  }
+  const value_str = html_input.value.replace(",", ".").replace(" ", "");
+  if (!isNumeric(value_str)) {
+    return 0;
+  }
+  return Number(value_str);
+}
+
 // Export functions, needed for Jest unittests
 // Using this hack it works for both, jest and browser.
 // from https://stackoverflow.com/questions/66349868/jest-unit-testing-module-export-error-in-browser-console
@@ -164,4 +179,5 @@ module.exports = {
   linreg,
   calc_row_new_delta,
   sort_data,
+  read_html_input_number,
 };
