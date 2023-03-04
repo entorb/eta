@@ -21,56 +21,65 @@ jsdom provides window.localStorage
 // throws SyntaxError: Cannot use import statement outside a module
 // so using require instead
 
-describe("Testing zeroPad", () => {
+describe("zeroPad()", () => {
   const { zeroPad } = require("./helper");
-  test("1->01", () => {
-    expect(zeroPad(1, 2)).toEqual("01");
-  });
+  const cases = [
+    // arg1, arg2, expectedResult
+    [1, 2, "01"],
+    [6, 3, "006"],
+  ];
+  test.each(cases)(
+    "given '%p', '%p' it shall return %p",
+    (arg1, arg2, expectedResult) => {
+      expect(zeroPad(arg1, arg2)).toEqual(expectedResult);
+    }
+  );
 });
 
-describe("Testing remaining_seconds_to_readable_time()", () => {
+describe("remaining_seconds_to_readable_time()", () => {
   const { rel_seconds_to_readable_time } = require("./helper");
-  test("1s", () => {
-    expect(rel_seconds_to_readable_time(1)).toEqual("1s");
-  });
-  test("100s", () => {
-    expect(rel_seconds_to_readable_time(100)).toEqual("1:40min");
-  });
-  test("0s", () => {
-    expect(rel_seconds_to_readable_time(0)).toEqual("0s");
-  });
-  test("-1s", () => {
-    expect(rel_seconds_to_readable_time(-1)).toEqual("0s");
-  });
-  test(">1h", () => {
-    expect(rel_seconds_to_readable_time(4000)).toEqual("1:07h");
-  });
-  test(">1d", () => {
-    expect(rel_seconds_to_readable_time(100000)).toEqual("1d 4h");
-  });
+  const cases = [
+    // arg1, arg2, expectedResult
+    [1, "1s"],
+    [0, "0s"],
+    [-1, "0s"],
+    [100, "1:40min"],
+    [4000, "1:07h"],
+    [100000, "1d 4h"],
+  ];
+  test.each(cases)(
+    "given '%p' as argument it shall return %p",
+    (arg1, expectedResult) => {
+      expect(rel_seconds_to_readable_time(arg1)).toEqual(expectedResult);
+    }
+  );
 });
 
-describe("Testing calc_speed_in_unit()", () => {
+describe("calc_speed_in_unit()", () => {
   const { calc_speed_in_unit } = require("./helper");
-  test("Minute", () => {
-    expect(calc_speed_in_unit(1234.567, "Minute")).toEqual(1234.6);
-  });
-  test("Hour", () => {
-    expect(calc_speed_in_unit(0.1, "Hour")).toEqual(6.0);
-  });
-  test("Day", () => {
-    expect(calc_speed_in_unit(0.1, "Day")).toEqual(144.0);
-  });
+  const cases = [
+    // arg1, arg2, expectedResult
+    [1234.567, "Minute", 1234.6],
+    [0.1, "Hour", 6.0],
+    [0.1, "Day", 144.0],
+    [0.1, "xxx", 0],
+  ];
+  test.each(cases)(
+    "given '%p', '%p' it shall return %p",
+    (arg1, arg2, expectedResult) => {
+      expect(calc_speed_in_unit(arg1, arg2)).toEqual(expectedResult);
+    }
+  );
 });
 
-describe("Testing timestamp_to_datestr()", () => {
+describe("timestamp_to_datestr()", () => {
   const { timestamp_to_datestr } = require("./helper");
   test("Minute", () => {
     expect(timestamp_to_datestr(1677320618262)).toEqual("25.2.2023 11:23:38");
   });
 });
 
-describe("Testing calc_remaining_items()", () => {
+describe("calc_remaining_items()", () => {
   const { calc_remaining_items } = require("./helper");
   test("target=0", () => {
     expect(calc_remaining_items(30, 0)).toEqual(30);
@@ -82,6 +91,7 @@ describe("Testing calc_remaining_items()", () => {
 
 describe("isNumeric()", () => {
   // from https://dev.to/bgord/simplify-repetitive-jest-test-cases-with-test-each-310m
+  const { isNumeric } = require("./helper");
   const cases = [
     ["10", true],
     ["asdf", false],
@@ -90,7 +100,6 @@ describe("isNumeric()", () => {
     ["10x", false],
     [" 10 ", true], // this is surprising
   ];
-  const { isNumeric } = require("./helper");
   test.each(cases)(
     "given '%p' as argument, returns %p",
     (firstArg, expectedResult) => {
@@ -100,7 +109,7 @@ describe("isNumeric()", () => {
   );
 });
 
-describe("Testing linreg()", () => {
+describe("linreg()", () => {
   const { linreg } = require("./helper");
   const x = [
     1677464718648, 1677464720558, 1677464721845, 1677464723069, 1677464724581,
@@ -112,11 +121,11 @@ describe("Testing linreg()", () => {
   });
 });
 
-describe("Testing calc_row_new_delta()", () => {
+describe("calc_row_new_delta()", () => {
   const { calc_row_new_delta } = require("./helper");
   const row_last = { items: 1, remaining: 9, timestamp: 1677554357951 };
-  const row_new = { items: 2, remaining: 8, timestamp: 1677554364952 };
-  test("test 1", () => {
+  test("normal case", () => {
+    const row_new = { items: 2, remaining: 8, timestamp: 1677554364952 };
     expect(calc_row_new_delta(row_new, row_last)).toEqual({
       items: 2,
       remaining: 8,
@@ -126,9 +135,17 @@ describe("Testing calc_row_new_delta()", () => {
       items_per_min: 8.570204256534781,
     });
   });
+  test("same timestamp", () => {
+    const row_new = { items: 2, remaining: 8, timestamp: 1677554357951 };
+    expect(calc_row_new_delta(row_new, row_last)).toEqual({
+      items: 2,
+      remaining: 8,
+      timestamp: 1677554357951,
+    });
+  });
 });
 
-describe("Testing sort_data()", () => {
+describe("sort_data()", () => {
   const { sort_data } = require("./helper");
   data = [
     {
@@ -145,7 +162,7 @@ describe("Testing sort_data()", () => {
       remaining: 9,
     },
   ];
-  test("test 1", () => {
+  test("normal case", () => {
     expect(sort_data(data)).toEqual([
       {
         timestamp: 1677554357951,
@@ -161,5 +178,8 @@ describe("Testing sort_data()", () => {
         eta_str: "28.2.2023 04:20:20",
       },
     ]);
+  });
+  test("empty data", () => {
+    expect(sort_data([])).toEqual([]);
   });
 });

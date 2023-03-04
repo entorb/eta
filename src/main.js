@@ -41,6 +41,7 @@ const html_input_target = document.getElementById("input_target");
 const html_input_items = document.getElementById("input_items");
 const html_input_remaining = document.getElementById("input_remaining");
 const html_input_delta = document.getElementById("input_delta");
+const html_div_table = document.getElementById("div_table");
 const html_div_chart = document.getElementById("div_chart");
 const html_text_eta = document.getElementById("text_eta");
 const html_text_remaining = document.getElementById("text_remaining");
@@ -80,7 +81,7 @@ let total_speed_time_unit = "Minute"; // Minute/Hour/Day
 
 // Table
 
-const table = table_create();
+const table = table_create(html_div_table);
 
 // Chart
 
@@ -453,26 +454,7 @@ function action_reset() {
 // eslint-disable-next-line no-unused-vars
 function action_table_delete_rows() {
   console.log("fnc action_table_delete_rows()");
-  // const selectedRows = table.getSelectedRows();
-  const selectedData = table.getSelectedData();
-  if (selectedData.length === data.length) {
-    // delete all via reset()
-    reset();
-    console.log("deleting all table data");
-    return;
-  }
-  for (let i = 0; i < selectedData.length; i++) {
-    const row = selectedData[i];
-    const timestamp_to_delete = row["timestamp"];
-    for (let j = data.length - 1; j >= 0; --j) {
-      if (data[j]["timestamp"] === timestamp_to_delete) {
-        data.splice(j, 1);
-      }
-    }
-  }
-  // TODO: sort not needed, but was too lazy to add another function
-  data = sort_data(data);
-  update_displays();
+  table_delete_rows(table, data);
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -544,6 +526,20 @@ function action_hide_intro() {
   // from https://stackoverflow.com/questions/1070760/javascript-href-vs-onclick-for-callback-function-on-hyperlink
   const html_text_intro = document.getElementById("text_intro");
   html_text_intro.remove();
+}
+
+// eslint-disable-next-line no-unused-vars
+function action_hide_table_chart() {
+  console.log("fnc action_hide_table_chart()");
+  const div = document.getElementById("div_table_chart");
+  const a = document.getElementById("a_hide_table_chart");
+  if (div.style.display === "none") {
+    div.style.display = "block";
+    a.innerHTML = "hide table and chart";
+  } else {
+    div.style.display = "none";
+    a.innerHTML = "show table and chart";
+  }
 }
 
 function action_add_hist() {

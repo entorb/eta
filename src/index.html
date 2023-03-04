@@ -24,6 +24,7 @@ TODOs
     <!-- eCharts https://echarts.apache.org/ https://echarts.apache.org/en/option.html-->
     <script src="lib/echarts-5.4.1.min.js"></script>
     <!-- my JavaScript -->
+    <script src="helper-lib.js"></script>
     <script src="helper.js"></script>
     <script src="main.js" defer></script>
     <!-- Matomo Access Stats -->
@@ -111,6 +112,8 @@ TODOs
             <td id="text_speed" style="text-align: center;">&nbsp;</td>
         </tr>
     </table>
+    <a id="a_hide_table_chart" title="Click to hide/show table and chart" href="#" onclick="action_hide_table_chart();return false;">hide table and chart</a>
+    <div id="div_table_chart">
     <!-- Tabulator table -->
     <div id="div_table" style="width: 900px;height:400px;"></div>
     <button id="btn_table_row_delete" onclick="action_table_delete_rows()">Delete selected rows</button>&nbsp;<button id="btn_reset" onclick="action_reset()">Delete All</button>
@@ -121,18 +124,19 @@ TODOs
             <option value="speed">Speed</option>
         </select>
     </div>
+    </div>
 
     <h2>Advanced Features</h2>
     <table>
         <tr>
-            <td>Enter Remaining</td>
-            <td><input id="input_remaining" type="text" inputmode="numeric" pattern="[0-9]*"></td>
-            <td><button id="btn_add_remaining" style="width:4em" onclick="action_add_remaining()">Add</button></td>
-        </tr>
-        <tr>
             <td>Enter Delta</td>
             <td><input id="input_delta" type="text" inputmode="numeric" pattern="[0-9]*"></td>
             <td><button id="btn_add_delta" style="width:4em" onclick="action_add_delta()">Add</button></td>
+        </tr>
+        <tr>
+            <td>Enter Remaining</td>
+            <td><input id="input_remaining" type="text" inputmode="numeric" pattern="[0-9]*"></td>
+            <td><button id="btn_add_remaining" style="width:4em" onclick="action_add_remaining()">Add</button></td>
         </tr>
     </table>
 

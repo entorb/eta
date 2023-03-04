@@ -61,38 +61,27 @@ const data = [
   },
 ];
 
-describe("Testing table creation", () => {
+describe("Table create and update", () => {
   // eslint-disable-next-line no-unused-vars
-  const { table_create, table_update } = require("./helper");
-  test("create", () => {
-    table = table_create();
+  const { table_create, table_update } = require("./helper-lib");
+  const html_div_table = document.getElementById("div_table");
+  test("table_create()", () => {
+    table = table_create(html_div_table);
     expect(table).toBeDefined();
-    total_speed_time_unit = "Minute";
-    // seems not to contribute to code coverage
-    table.on("tableBuilt", function () {
-      table_update(data, total_speed_time_unit);
-    });
   });
-});
-
-describe("Testing table creation", () => {
-  // eslint-disable-next-line no-unused-vars
-  const { table_create, table_update } = require("./helper");
-  test("create", () => {
-    table = table_create();
-    expect(table).toBeDefined();
-    total_speed_time_unit = "Minute";
-    // seems not to contribute to code coverage
-    table.on("tableBuilt", function () {
-      table_update(table, data, total_speed_time_unit);
-    });
+  test("table_update()", () => {
+    table = table_create(html_div_table);
+    // FIXME: does not to contribute to code coverage
+    // table.on("tableBuilt", function () {
+    // table_update(table, data, "Minute");
+    // });
   });
 });
 
 // seems not to work in jest
 // describe("Testing echarts", () => {
 //   // eslint-disable-next-line no-unused-vars
-//   const { chart_create, chart_update } = require("./helper");
+//   const { chart_create, chart_update } = require("./helper-lib");
 //   const html_div_chart = document.getElementById("div_chart");
 
 //   test("create", () => {
