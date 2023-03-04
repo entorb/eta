@@ -1,11 +1,15 @@
 /* eslint-disable camelcase */
-/* eslint-disable require-jsdoc */
 ("use strict");
 
 // converters
 
 const zeroPad = (num, places) => String(num).padStart(places, "0");
 
+/**
+ * Convert a duration in seconds to a human readable format.
+ * @param {int} totalSeconds
+ * @return {string} of days/hours/minutes/seconds
+ */
 function rel_seconds_to_readable_time(totalSeconds) {
   // based https://codingbeautydev.com/blog/javascript-convert-seconds-to-hours-and-minutes/
   totalSeconds = Math.floor(totalSeconds);
@@ -29,9 +33,13 @@ function rel_seconds_to_readable_time(totalSeconds) {
     return days.toString() + "d " + hours.toString() + "h";
   }
 }
-
+/**
+ * Convert items_per_min to items_per_hour or items_per_day.
+ * @param {float} items_per_min
+ * @param {string} speed_unit : Minute/Hour/Day
+ * @return {float} speed in speed_unit, rounded to 1 digit
+ */
 function calc_speed_in_unit(items_per_min, speed_unit) {
-  // unit: per Minute/Hour/Day
   let speed = 0;
   if (speed_unit === "Minute") {
     speed = Math.abs(Math.round(10 * items_per_min) / 10);
@@ -45,6 +53,11 @@ function calc_speed_in_unit(items_per_min, speed_unit) {
   return speed;
 }
 
+/**
+ * Convert timestamp to date string.
+ * @param {int} timestamp in ms
+ * @return {string} date like 25.2.2023 10:25:42
+ */
 function timestamp_to_datestr(timestamp) {
   const d = new Date(timestamp);
   let date_str = d.toLocaleString("de-DE");
@@ -52,6 +65,12 @@ function timestamp_to_datestr(timestamp) {
   return date_str;
 }
 
+/**
+ * Calc remaining items.
+ * @param {float} items
+ * @param {float} target
+ * @return {float} remaining items
+ */
 function calc_remaining_items(items, target) {
   if (target === 0) {
     return items;
@@ -61,6 +80,11 @@ function calc_remaining_items(items, target) {
 }
 
 // math helpers
+/**
+ * Check if a string is numeric.
+ * @param {str} str input string
+ * @return {bool}
+ */
 function isNumeric(str) {
   // from https://stackoverflow.com/questions/175739/how-can-i-check-if-a-string-is-a-valid-number
   // if (typeof str != "string") return false; // we only process strings!
@@ -71,6 +95,12 @@ function isNumeric(str) {
   );
 }
 
+/**
+ * Perform linear regression calculation.
+ * @param {Array} x
+ * @param {Array} y
+ * @return {Array} of slope, intercept
+ */
 function linreg(x, y) {
   // from https://oliverjumpertz.com/simple-linear-regression-theory-math-and-implementation-in-javascript/
   const sumX = x.reduce((prev, curr) => prev + curr, 0);
@@ -100,6 +130,12 @@ function linreg(x, y) {
 
 // data modification
 
+/**
+ * Compares row_new to row_last and calculates items_per_min and eta from the delta
+ * @param {Object} row_new
+ * @param {Object} row_last
+ * @return {Object} row_new
+ */
 function calc_row_new_delta(row_new, row_last) {
   // modifies row_new
   // calc items_per_min
@@ -125,6 +161,11 @@ function calc_row_new_delta(row_new, row_last) {
   return row_new;
 }
 
+/**
+ * Sort data Array, recalculate items_per_min, update localStorage
+ * @param {Array} data
+ * @return {Array} data
+ */
 function sort_data(data) {
   /* istanbul ignore else */
   if (data.length <= 0) {
@@ -148,7 +189,11 @@ function sort_data(data) {
 }
 
 // interactions with HTML elements
-
+/**
+ * Read value of an html input field, convert to Number
+ * @param {*} html_input
+ * @return {float}, 0 in case field is non-nummeric
+ */
 function read_html_input_number(html_input) {
   console.log("fnc read_html_input_number()");
   if (!html_input.value) {

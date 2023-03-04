@@ -88,7 +88,11 @@ const table = table_create(html_div_table);
 const chart = chart_create(html_div_chart, total_speed_time_unit);
 
 // Update functions
-
+/**
+ * Update display of html_text_eta, html_text_speed
+ * calls update_runtime_and_remaining()
+ * re-initialize the auto-refresh timer
+ */
 function update_total_eta_and_speed() {
   console.log("fnc update_total_eta_and_speed()");
   const last_row = data.slice(-1)[0];
@@ -125,7 +129,7 @@ function update_total_eta_and_speed() {
     html_text_speed.innerHTML =
       Math.round(10 * total_items_per_min * 1440) / 10 + " Items/d";
   }
-  update_timers();
+  update_runtime_and_remaining();
 
   // stop auto-refresh timer
   clearInterval(interval_auto_refresh);
@@ -138,11 +142,18 @@ function update_total_eta_and_speed() {
       // once per min for > 1 hour remaining time
       time_sleeptime = 60000;
     }
-    interval_auto_refresh = setInterval(update_timers, time_sleeptime);
+    interval_auto_refresh = setInterval(
+      update_runtime_and_remaining,
+      time_sleeptime
+    );
   }
 }
 
-function update_timers() {
+/**
+ * Updates values of html_text_remaining and html_text_runtime
+ * Stops interval_auto_refresh in case remaining time is < 0
+ */
+function update_runtime_and_remaining() {
   console.log("fnc update_timers()");
   if (data.length === 0) {
     console.log("data empty, nothing to do");
@@ -160,6 +171,9 @@ function update_timers() {
   html_text_runtime.innerHTML = rel_seconds_to_readable_time(ms_passed / 1000);
 }
 
+/**
+ * Updates html_text_start and html_text_pct
+ */
 function update_start_and_pct() {
   console.log("fnc update_start_and_pct()");
   if (data.length === 0) {
@@ -190,6 +204,9 @@ function update_start_and_pct() {
   html_text_pct.innerHTML = percent + "%";
 }
 
+/**
+ * Update all visuals
+ */
 function update_displays() {
   console.log("fnc update_displays()");
   if (data.length > 0) {
@@ -208,6 +225,9 @@ function update_displays() {
   }
 }
 
+/**
+ * Reset all data
+ */
 function reset() {
   console.log("fnc reset()");
   clearInterval(interval_auto_refresh);
@@ -235,7 +255,9 @@ function reset() {
 }
 
 // set data
-
+/**
+ * Set target value, performs validation
+ */
 function set_target() {
   console.log("fnc set_target()");
   let target_new;
@@ -291,6 +313,11 @@ function set_target() {
   }
 }
 
+/**
+ * Appends items, timestamp, remaining to data
+ * Calls calc_row_new_delta in case data > 1
+ * @param {float} items
+ */
 function add_items(items) {
   console.log("fnc add_items()");
   if (!("target" in settings)) {
