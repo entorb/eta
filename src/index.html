@@ -18,6 +18,25 @@ TODOs
     <link href="/style.css" rel="stylesheet">
     <!-- eta stylesheet -->
     <link href="eta.css" rel="stylesheet">
+    <!-- Sentry Exception Tracking -->
+    <script src="https://js.sentry-cdn.com/cd9fd37413aa4a8fbc14a0380ecc1fa6.min.js" crossorigin="anonymous"></script>
+    <script>
+        Sentry.onLoad(function () {
+            Sentry.init({
+                release: "1.0.0",
+                environment: "prod",
+                beforeSend(event) {
+                    // Scrubbing user data for privacy reasons
+                    if (event.user) {
+                        // delete event.user.ip;
+                        // delete event.user.email;
+                        delete event.user; // drop all user info
+                    }
+                    return event;
+                },
+            });
+        })
+    </script>
     <!-- Tabulator https://tabulator.info/ https://tabulator.info/docs/ -->
     <link href="lib/tabulator.min.css" rel="stylesheet">
     <script src="lib/tabulator-5.4.min.js"></script>
