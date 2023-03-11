@@ -141,7 +141,7 @@ function calc_row_new_delta(row_new, row_last) {
   // calc items_per_min
   if (row_new["timestamp"] != row_last["timestamp"]) {
     row_new["items_per_min"] =
-      (60000 * (row_new["items"] - row_last["items"])) /
+      -(60000 * (row_new["remaining"] - row_last["remaining"])) /
       (row_new["timestamp"] - row_last["timestamp"]);
   } else {
     delete row_new["items_per_min"];
