@@ -29,6 +29,8 @@ set target: allow change of target and trigger recalc of remaining items for all
 enter delta
 enter remaining
 prevent entering non-numbers
+add delta1
+html placeholders
 
 TODO/IDEAS
 chart: choose to display remaining instead of items
@@ -244,6 +246,7 @@ function reset() {
   html_text_runtime.innerHTML = "&nbsp;";
   html_text_pct.innerHTML = "&nbsp;";
   html_text_speed.innerHTML = "&nbsp;";
+  html_input_items.placeholder = "";
   table_update(table, data, total_speed_time_unit);
   chart_update(
     chart,
@@ -423,6 +426,7 @@ function action_add_items() {
   console.log("fnc action_add_items()");
   const items = read_html_input_number(html_input_items);
   add_items(items);
+  html_input_items.placeholder = "";
   html_input_items.value = "";
 }
 
@@ -431,8 +435,10 @@ function action_add_remaining() {
   const remaining = read_html_input_number(html_input_remaining);
   if (settings["target"] === 0) {
     add_items(remaining);
+    html_input_items.placeholder = remaining;
   } else {
     add_items(settings["target"] - remaining);
+    html_input_items.placeholder = settings["target"] - remaining;
   }
   html_input_remaining.value = "";
 }
@@ -453,6 +459,25 @@ function action_add_delta() {
   }
   // keep delta input populated, to allow for easy +1
   // html_input_delta.value = "";
+}
+
+// eslint-disable-next-line no-unused-vars
+function action_add_delta1() {
+  console.log("fnc action_add_delta1()");
+  if (data.length === 0) {
+    console.log("data empty, nothing to do");
+    return;
+  }
+  const delta = 1;
+  const row_last = data.slice(-1)[0];
+
+  if (settings["target"] === 0) {
+    add_items(row_last["items"] - delta);
+    html_input_items.placeholder = row_last["items"] - delta;
+  } else {
+    add_items(row_last["items"] + delta);
+    html_input_items.placeholder = row_last["items"] + delta;
+  }
 }
 
 // eslint-disable-next-line no-unused-vars
