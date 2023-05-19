@@ -13,7 +13,7 @@ Estimates remaining waiting time, hosted at <https://entorb.net/eta/>
 
 * Mode countdown (target = 0)
 * Mode countup (target > 0)
-* Table and chart of speed over time
+* Display of table and chart of speed over time
 
 ## How to use this repository
 
