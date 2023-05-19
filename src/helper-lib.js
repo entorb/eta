@@ -58,6 +58,8 @@ function table_update(table, data, total_speed_time_unit) {
         total_speed_time_unit
       );
     }
+    // rounding of remaining to 1 digit
+    row["remaining"] = Math.round(row["remaining"] * 10) / 10;
     data_table.push(row);
   }
   table.setData(data_table);
