@@ -9,6 +9,7 @@ mkdir -p src/lib
 # ECharts
 ver=5.4.1
 wget -q https://raw.githubusercontent.com/apache/echarts/$ver/dist/echarts.min.js -O src/lib/echarts-$ver.min.js
+wget -q https://raw.githubusercontent.com/apache/echarts/$ver/dist/echarts.min.map -O src/lib/echarts-$ver.min.map
 
 # Tabulator
 ver=5.4.4
