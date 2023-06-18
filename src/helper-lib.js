@@ -90,7 +90,6 @@ function table_delete_rows(table, data) {
   update_displays();
 }
 
-
 //
 // ECharts
 //
