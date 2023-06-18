@@ -3,10 +3,12 @@
 ("use strict");
 
 /**
- * helper functions for tabulator and echarts
+ * helper functions for Tabulator and ECharts
  */
 
-// Tabulator Table
+//
+// Tabulator
+//
 
 function table_create(html_div_id) {
   const table = new Tabulator(html_div_id, {
@@ -87,7 +89,11 @@ function table_delete_rows(table, data) {
   data = sort_data(data);
   update_displays();
 }
-// eCharts
+
+
+//
+// ECharts
+//
 
 function chart_create(html_div_chart) {
   const chart = echarts.init(html_div_chart);
