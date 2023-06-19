@@ -1,0 +1,14 @@
+camelcase
+countup
+datestr
+datetime
+echarts
+linreg
+luxon
+Mastrodon
+matomo
+prio
+recalc
+sleeptime
+testc
+unittests
