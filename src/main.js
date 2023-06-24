@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 /* eslint-disable require-jsdoc */
-("use strict");
+"use strict";
 
 /*
 DONE
@@ -38,7 +38,9 @@ tabulator: use global data, and update column speed name upon switching unit
 echarts: use global data, and update speed unit
 */
 
-// html elements
+//
+// DOM elements
+//
 const html_input_target = document.getElementById("input_target");
 const html_input_items = document.getElementById("input_items");
 const html_input_remaining = document.getElementById("input_remaining");
@@ -100,8 +102,7 @@ function update_total_eta_and_speed() {
   const last_row = data.slice(-1)[0];
   const xArray = [];
   const yArray = [];
-  for (let i = 0; i < data.length; i++) {
-    const row = data[i];
+  for (const row of data) {
     xArray.push(row["timestamp"]);
     yArray.push(row["remaining"]);
   }
@@ -111,10 +112,9 @@ function update_total_eta_and_speed() {
   // slope of remaining items is negative
 
   total_timestamp_eta = Math.round(
-    last_row["timestamp"] + (-1 * last_row["remaining"]) / slope
+    last_row["timestamp"] - (last_row["remaining"] / slope)
   );
-  html_text_eta.innerHTML =
-    "<b>" + timestamp_to_datestr(total_timestamp_eta) + "</b>";
+  html_text_eta.innerHTML = `<b>${timestamp_to_datestr(total_timestamp_eta)}</b>`;
 
   // ensure total_items_per_min to be positive
   total_items_per_min = Math.abs(slope) * 60000;
@@ -199,8 +199,8 @@ function update_start_and_pct() {
     percent =
       Math.round(
         10 *
-          100 *
-          (row_last["items"] / (row_first["items"] + row_first["remaining"]))
+        100 *
+        (row_last["items"] / (row_first["items"] + row_first["remaining"]))
       ) / 10;
   }
   html_text_pct.innerHTML = percent + "%";
@@ -299,9 +299,9 @@ function set_target() {
 
   // update re-calculate remaining items for existing data
   if (data.length > 0) {
-    data.forEach(function (row) {
+    for (const row of data) {
       row["remaining"] = calc_remaining_items(row["items"], settings["target"]);
-    });
+    }
     // re-calculate eta
     for (let i = 1; i < data.length; i++) {
       data[i] = calc_row_new_delta(data[i], data[i - 1]);
@@ -329,11 +329,11 @@ function add_items(items) {
   const target = settings["target"];
   // checks regarding target
   if (items < 0) {
-    alert("New entry (" + items + ") must be positive.");
+    alert(`New entry (${items}) must be positive.`);
     return;
   }
   if (target > 0 && items > target) {
-    alert("New entry (" + items + ") must not exceed target (" + target + ").");
+    alert(`New entry (${items}) must not exceed target (${target}).`);
     return;
   }
   // checks regarding last row
@@ -343,22 +343,14 @@ function add_items(items) {
     // in mode=countdown, we only except decreasing values
     if (target === 0 && items >= row_last["items"]) {
       alert(
-        "New entry (" +
-          items +
-          ") must be < previous entry (" +
-          row_last["items"] +
-          ") in countdown mode."
+        `New entry (${items}) must be < previous entry (${row_last["items"]}) in countdown mode.`
       );
       return;
     }
     // in mode=countup, we only except increasing values
     if (target > 0 && items <= row_last["items"]) {
       alert(
-        "New entry (" +
-          items +
-          ") must be > previous entry (" +
-          row_last["items"] +
-          ") in countup mode."
+        `New entry (${items}) must be > previous entry (${row_last["items"]}) in countup mode.`
       );
       return;
     }
