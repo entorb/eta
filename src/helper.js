@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-("use strict");
+"use strict";
 
 // converters
 
@@ -141,7 +141,7 @@ function linreg(x, y) {
 function calc_row_new_delta(row_new, row_last) {
   // modifies row_new
   // calc items_per_min
-  if (row_new["timestamp"] != row_last["timestamp"]) {
+  if (row_new["timestamp"] !== row_last["timestamp"]) {
     row_new["items_per_min"] =
       -(60000 * (row_new["remaining"] - row_last["remaining"])) /
       (row_new["timestamp"] - row_last["timestamp"]);

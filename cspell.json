@@ -1,12 +1,10 @@
 {
-    "dictionaries": [
-        "cspell-words"
-    ],
-    "dictionaryDefinitions": [
-        {
-            "name": "cspell-words",
-            "path": "cspell-words.txt",
-            "addWords": true
-        }
-    ]
+  "dictionaries": ["cspell-words"],
+  "dictionaryDefinitions": [
+    {
+      "name": "cspell-words",
+      "path": "cspell-words.txt",
+      "addWords": true
+    }
+  ]
 }

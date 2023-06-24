@@ -112,9 +112,11 @@ function update_total_eta_and_speed() {
   // slope of remaining items is negative
 
   total_timestamp_eta = Math.round(
-    last_row["timestamp"] - (last_row["remaining"] / slope)
+    last_row["timestamp"] - last_row["remaining"] / slope
   );
-  html_text_eta.innerHTML = `<b>${timestamp_to_datestr(total_timestamp_eta)}</b>`;
+  html_text_eta.innerHTML = `<b>${timestamp_to_datestr(
+    total_timestamp_eta
+  )}</b>`;
 
   // ensure total_items_per_min to be positive
   total_items_per_min = Math.abs(slope) * 60000;
@@ -199,8 +201,8 @@ function update_start_and_pct() {
     percent =
       Math.round(
         10 *
-        100 *
-        (row_last["items"] / (row_first["items"] + row_first["remaining"]))
+          100 *
+          (row_last["items"] / (row_first["items"] + row_first["remaining"]))
       ) / 10;
   }
   html_text_pct.innerHTML = percent + "%";

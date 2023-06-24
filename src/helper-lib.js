@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 /* eslint-disable require-jsdoc */
-("use strict");
+"use strict";
 
 /**
  * helper functions for Tabulator and ECharts
