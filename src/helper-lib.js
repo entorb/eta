@@ -13,6 +13,7 @@
 function table_create(html_div_id) {
   const table = new Tabulator(html_div_id, {
     height: "100%",
+    // reactiveData: true,
     // data: data,
     layout: "fitDataStretch", // fit columns to width of table (optional)
     selectable: true,
@@ -30,6 +31,13 @@ function table_create(html_div_id) {
         field: "remaining",
         headerSort: false,
         hozAlign: "center",
+        formatter: function (cell, formatterParams, onRendered) {
+          // cell - the cell component
+          // formatterParams - parameters set for the column
+          // onRendered - function to call when the formatter has been rendered
+          // rounding of remaining to 1 digit
+          return Math.round(cell.getValue() * 10) / 10;
+        },
       },
       { title: "Speed", field: "speed", headerSort: false, hozAlign: "center" },
       { title: "ETA", field: "eta_str", headerSort: false, hozAlign: "left" },
@@ -37,6 +45,11 @@ function table_create(html_div_id) {
   });
   return table;
 }
+
+// TODO:
+//   table.updateColumnDefinition("speed", {
+//     title: "Items/" + total_speed_time_unit,
+//   });
 
 function table_update(table, data, total_speed_time_unit) {
   console.log("fnc table_update()");
@@ -76,6 +89,14 @@ function table_delete_rows(table, data) {
     console.log("deleting all table data");
     return;
   }
+
+  // V2, not fully working?
+  // const timestampsToDelete = selectedData.map(row => row["timestamp"]);
+  // console.log(selectedData);
+  // console.log(timestampsToDelete);
+  // data = data.filter(row => !timestampsToDelete.includes(row["timestamp"]));
+
+  // V1: remove later
   for (let i = 0; i < selectedData.length; i++) {
     const row = selectedData[i];
     const timestamp_to_delete = row["timestamp"];

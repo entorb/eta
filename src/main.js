@@ -325,6 +325,8 @@ function set_target() {
  */
 function add_items(items) {
   console.log("fnc add_items()");
+
+  // validation errors raise alarms
   if (!("target" in settings)) {
     set_target();
   }
@@ -363,6 +365,7 @@ function add_items(items) {
   const timestamp = d.getTime();
   let row_new = {
     timestamp: timestamp,
+    date_str: timestamp_to_datestr(timestamp),
     items: items,
     remaining: calc_remaining_items(items, target), // remaining shall always be > 0
   };

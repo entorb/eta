@@ -69,13 +69,6 @@ describe("Table create and update", () => {
     table = table_create(html_div_table);
     expect(table).toBeDefined();
   });
-  test("table_update()", () => {
-    table = table_create(html_div_table);
-    // FIXME: does not to contribute to code coverage
-    // table.on("tableBuilt", function () {
-    // table_update(table, data, "Minute");
-    // });
-  });
 });
 
 // seems not to work in jest

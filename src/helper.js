@@ -145,6 +145,11 @@ function calc_row_new_delta(row_new, row_last) {
     row_new["items_per_min"] =
       -(60000 * (row_new["remaining"] - row_last["remaining"])) /
       (row_new["timestamp"] - row_last["timestamp"]);
+    // TODO: recalc all if unit changes
+    row_new["speed"] = calc_speed_in_unit(
+      row_new["items_per_min"],
+      total_speed_time_unit
+    );
   } else {
     delete row_new["items_per_min"];
   }
