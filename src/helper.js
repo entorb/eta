@@ -178,20 +178,38 @@ function sort_data(data) {
   if (data.length <= 0) {
     return data;
   }
-  // remove items_per_min from new first item
-  delete data[0]["items_per_min"];
   // sorting from https://stackoverflow.com/questions/1129216/sort-array-of-objects-by-string-property-value
   // console.log(data);
   /* istanbul ignore else */
   if (data.length > 1) {
     data.sort((a, b) => a.timestamp - b.timestamp);
+  }
+  // console.log(data);
+  window.localStorage.setItem("eta_data", JSON.stringify(data));
+  data = recalc_IpM_and_speed(data);
+  return data;
+}
+
+/**
+ * read data Array, recalculate items_per_min
+ * does not update local storage
+ * @param {Array} data
+ * @return {Array} data
+ */
+function recalc_IpM_and_speed(data) {
+  if (data.length <= 0) {
+    return data;
+  }
+  console.log("deleting from data[0]");
+  // remove items_per_min from new first item
+  delete data[0]["items_per_min"];
+  delete data[0]["speed"];
+  if (data.length > 1) {
     // re-calculate items per minute
     for (let i = 1; i < data.length; i++) {
       data[i] = calc_row_new_delta(data[i], data[i - 1]);
     }
   }
-  // console.log(data);
-  window.localStorage.setItem("eta_data", JSON.stringify(data));
   return data;
 }
 

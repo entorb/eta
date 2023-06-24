@@ -13,8 +13,8 @@
 function table_create(html_div_id) {
   const table = new Tabulator(html_div_id, {
     height: "100%",
-    // reactiveData: true,
-    // data: data,
+    reactiveData: true,
+    data: data,
     layout: "fitDataStretch", // fit columns to width of table (optional)
     selectable: true,
     columns: [
@@ -46,39 +46,6 @@ function table_create(html_div_id) {
   return table;
 }
 
-// TODO:
-//   table.updateColumnDefinition("speed", {
-//     title: "Items/" + total_speed_time_unit,
-//   });
-
-function table_update(table, data, total_speed_time_unit) {
-  console.log("fnc table_update()");
-  // IDEA: Instead of using this function, the setting reactiveData:true and data:data could be used, but this would require the calculated columns to be present in the data array. This in turn would be problematic for changes of the unit speed...
-  // IDEA: second function for just adding a row instead of recreating the table each time?
-  const data_table = [];
-  // BUG: this is only updated when the second time called
-  table.updateColumnDefinition("speed", {
-    title: "Items/" + total_speed_time_unit,
-  });
-
-  for (let i = 0; i < data.length; i++) {
-    // bad: const row = data[i];
-    // clone / copy the original row
-    // from https://www.samanthaming.com/tidbits/70-3-ways-to-clone-objects/
-    const row = Object.assign({}, data[i]);
-    row["date_str"] = timestamp_to_datestr(row["timestamp"]);
-    if ("items_per_min" in row) {
-      row["speed"] = calc_speed_in_unit(
-        row["items_per_min"],
-        total_speed_time_unit
-      );
-    }
-    // rounding of remaining to 1 digit
-    row["remaining"] = Math.round(row["remaining"] * 10) / 10;
-    data_table.push(row);
-  }
-  table.setData(data_table);
-}
 
 function table_delete_rows(table, data) {
   // const selectedRows = table.getSelectedRows();
@@ -106,8 +73,8 @@ function table_delete_rows(table, data) {
       }
     }
   }
-  // TODO: sort not needed, but was too lazy to add another function
-  data = sort_data(data);
+  data = recalc_IpM_and_speed(data);
+  window.localStorage.setItem("eta_data", JSON.stringify(data));
   update_displays();
 }
 
@@ -278,7 +245,6 @@ function chart_update(
 var module = module || {};
 module.exports = {
   table_create,
-  table_update,
   table_delete_rows,
   chart_create,
   chart_update,

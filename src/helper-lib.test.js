@@ -63,7 +63,7 @@ const data = [
 
 describe("Table create and update", () => {
   // eslint-disable-next-line no-unused-vars
-  const { table_create, table_update } = require("./helper-lib");
+  const { table_create } = require("./helper-lib");
   const html_div_table = document.getElementById("div_table");
   test("table_create()", () => {
     table = table_create(html_div_table);

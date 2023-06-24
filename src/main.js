@@ -119,6 +119,7 @@ function update_total_eta_and_speed() {
   )}</b>`;
 
   // ensure total_items_per_min to be positive
+  const total_speed_time_unit_old = total_speed_time_unit;
   total_items_per_min = Math.abs(slope) * 60000;
   if (total_items_per_min > 0.5) {
     total_speed_time_unit = "Minute";
@@ -132,6 +133,13 @@ function update_total_eta_and_speed() {
     total_speed_time_unit = "Day";
     html_text_speed.innerHTML =
       Math.round(10 * total_items_per_min * 1440) / 10 + " Items/d";
+  }
+  // unit of speed has changed -> recalc speed and set table header
+  if (total_speed_time_unit !== total_speed_time_unit_old) {
+    data = recalc_IpM_and_speed(data);
+    table.updateColumnDefinition("speed", {
+      title: "Items/" + total_speed_time_unit,
+    });
   }
   update_runtime_and_remaining();
 
@@ -201,8 +209,8 @@ function update_start_and_pct() {
     percent =
       Math.round(
         10 *
-          100 *
-          (row_last["items"] / (row_first["items"] + row_first["remaining"]))
+        100 *
+        (row_last["items"] / (row_first["items"] + row_first["remaining"]))
       ) / 10;
   }
   html_text_pct.innerHTML = percent + "%";
@@ -215,7 +223,6 @@ function update_displays() {
   console.log("fnc update_displays()");
   if (data.length > 0) {
     update_start_and_pct();
-    table_update(table, data, total_speed_time_unit);
     if (data.length >= 2) {
       update_total_eta_and_speed();
       chart_update(
@@ -249,7 +256,8 @@ function reset() {
   html_text_pct.innerHTML = "&nbsp;";
   html_text_speed.innerHTML = "&nbsp;";
   html_input_items.placeholder = "";
-  table_update(table, data, total_speed_time_unit);
+  table.clearData();
+  table.setData(data);
   chart_update(
     chart,
     html_sel_chart_y2.value,
@@ -440,41 +448,28 @@ function action_add_remaining() {
   html_input_remaining.value = "";
 }
 
-function action_add_delta() {
+function action_add_delta(delta = null) {
   console.log("fnc action_add_delta()");
-  if (data.length === 0) {
-    console.log("data empty, nothing to do");
-    return;
+
+  // last items or fallback to 0
+  const last_items = data.length > 0 ? data.slice(-1)[0]["items"] : 0;
+
+  if (delta === null) {
+    delta = read_html_input_number(html_input_delta);
   }
-  const delta = read_html_input_number(html_input_delta);
-  const row_last = data.slice(-1)[0];
 
   if (settings["target"] === 0) {
-    add_items(row_last["items"] - delta);
+    add_items(last_items - delta);
+    html_input_items.placeholder = last_items - delta;
   } else {
-    add_items(row_last["items"] + delta);
+    add_items(last_items + delta);
+    html_input_items.placeholder = last_items + delta;
   }
-  // keep delta input populated, to allow for easy +1
-  // html_input_delta.value = "";
 }
 
 // eslint-disable-next-line no-unused-vars
 function action_add_delta1() {
-  console.log("fnc action_add_delta1()");
-  if (data.length === 0) {
-    console.log("data empty, nothing to do");
-    return;
-  }
-  const delta = 1;
-  const row_last = data.slice(-1)[0];
-
-  if (settings["target"] === 0) {
-    add_items(row_last["items"] - delta);
-    html_input_items.placeholder = row_last["items"] - delta;
-  } else {
-    add_items(row_last["items"] + delta);
-    html_input_items.placeholder = row_last["items"] + delta;
-  }
+  action_add_delta(1);
 }
 
 // eslint-disable-next-line no-unused-vars
