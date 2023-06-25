@@ -107,9 +107,10 @@ function update_total_eta_and_speed() {
     yArray.push(row["remaining"]);
   }
   // const [slope, intercept] = linreg(xArray, yArray);
+  // slope of remaining items
+  // is always negative
+  // slope is speed in items/ms
   const slope = linreg(xArray, yArray)[0];
-  // slope = speed in items/ms
-  // slope of remaining items is negative
 
   total_timestamp_eta = Math.round(
     last_row["timestamp"] - last_row["remaining"] / slope
@@ -118,7 +119,7 @@ function update_total_eta_and_speed() {
     total_timestamp_eta
   )}</b>`;
 
-  // ensure total_items_per_min to be positive
+  // decide on speed unit
   const total_speed_time_unit_old = total_speed_time_unit;
   total_items_per_min = Math.abs(slope) * 60000;
   if (total_items_per_min > 0.5) {
