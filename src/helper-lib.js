@@ -12,7 +12,8 @@
 
 function table_create(html_div_id) {
   const table = new Tabulator(html_div_id, {
-    height: "100%",
+    // height: "100%",
+    maxHeight: "100%", //do not let table get bigger than the height of its parent element
     reactiveData: true,
     data: data,
     layout: "fitDataStretch", // fit columns to width of table (optional)
@@ -93,10 +94,10 @@ function chart_create(html_div_chart) {
     grid: {
       // define margins
       containLabel: false,
-      left: 50,
-      bottom: 20,
-      top: 30,
-      right: 150,
+      // left: 50,
+      // bottom: 20,
+      // top: 30,
+      // right: 75,
     },
   });
   return chart;
