@@ -210,8 +210,8 @@ function update_start_and_pct() {
     percent =
       Math.round(
         10 *
-        100 *
-        (row_last["items"] / (row_first["items"] + row_first["remaining"]))
+          100 *
+          (row_last["items"] / (row_first["items"] + row_first["remaining"]))
       ) / 10;
   }
   html_text_pct.innerHTML = percent + "%";

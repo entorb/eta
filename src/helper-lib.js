@@ -13,7 +13,7 @@
 function table_create(html_div_id) {
   const table = new Tabulator(html_div_id, {
     // height: "100%",
-    maxHeight: "100%", //do not let table get bigger than the height of its parent element
+    maxHeight: "100%", // do not let table get bigger than the height of its parent element
     reactiveData: true,
     data: data,
     layout: "fitDataStretch", // fit columns to width of table (optional)
@@ -46,7 +46,6 @@ function table_create(html_div_id) {
   });
   return table;
 }
-
 
 function table_delete_rows(table, data) {
   // const selectedRows = table.getSelectedRows();
