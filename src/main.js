@@ -31,6 +31,7 @@ enter remaining
 prevent entering non-numbers
 add delta1
 html placeholders
+weighted linreg instead, to put more weight on the latest items
 
 TODO/IDEAS
 chart: choose to display remaining instead of items
@@ -110,7 +111,8 @@ function update_total_eta_and_speed() {
   // slope of remaining items
   // is always negative
   // slope is speed in items/ms
-  const slope = linreg(xArray, yArray)[0];
+  // const slope = linreg(xArray, yArray)[0];
+  const slope = linreg_weighted(xArray, yArray)[0];
 
   total_timestamp_eta = Math.round(
     last_row["timestamp"] - last_row["remaining"] / slope
@@ -210,8 +212,8 @@ function update_start_and_pct() {
     percent =
       Math.round(
         10 *
-          100 *
-          (row_last["items"] / (row_first["items"] + row_first["remaining"]))
+        100 *
+        (row_last["items"] / (row_first["items"] + row_first["remaining"]))
       ) / 10;
   }
   html_text_pct.innerHTML = percent + "%";

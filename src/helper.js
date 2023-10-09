@@ -105,6 +105,9 @@ function isNumeric(str) {
  */
 function linreg(x, y) {
   // from https://oliverjumpertz.com/simple-linear-regression-theory-math-and-implementation-in-javascript/
+  if (x.length !== y.length) {
+    throw new Error("Arrays x and y must have the same length.");
+  }
   const sumX = x.reduce((prev, curr) => prev + curr, 0);
   const avgX = sumX / x.length;
   const xDifferencesToAverage = x.map((value) => avgX - value);
@@ -128,6 +131,47 @@ function linreg(x, y) {
   const slope = SSxy / SSxx;
   const intercept = avgY - slope * avgX;
   return [slope, intercept];
+}
+
+/**
+ * Perform weighted linear regression calculation with normalized weights.
+ * @param {Array} x
+ * @param {Array} y
+ * @return {Array} of weighted slope, weighted intercept
+ */
+function linreg_weighted(x, y) {
+  if (x.length !== y.length) {
+    throw new Error("Arrays x and y must have the same length.");
+  }
+
+  const n = x.length;
+  let sumWeightedX = 0;
+  let sumWeightedY = 0;
+  let sumWeight = 0;
+
+  for (let i = 0; i < n; i++) {
+    const weight = i + 1; // Normalized weight based on position in the list.
+    sumWeight += weight;
+    sumWeightedX += x[i] * weight;
+    sumWeightedY += y[i] * weight;
+  }
+
+  const weightedAvgX = sumWeightedX / sumWeight;
+  const weightedAvgY = sumWeightedY / sumWeight;
+
+  let numerator = 0;
+  let denominator = 0;
+
+  for (let i = 0; i < n; i++) {
+    const weight = i + 1;
+    numerator += weight * (x[i] - weightedAvgX) * (y[i] - weightedAvgY);
+    denominator += weight * (x[i] - weightedAvgX) ** 2;
+  }
+
+  const weightedSlope = numerator / denominator;
+  const weightedIntercept = weightedAvgY - weightedSlope * weightedAvgX;
+
+  return [weightedSlope, weightedIntercept];
 }
 
 // data modification
@@ -157,7 +201,7 @@ function calc_row_new_delta(row_new, row_last) {
   if ("items_per_min" in row_new && row_new["items_per_min"] != 0) {
     const ts_eta = Math.round(
       row_new["timestamp"] +
-        (row_new["remaining"] / row_new["items_per_min"]) * 60000
+      (row_new["remaining"] / row_new["items_per_min"]) * 60000
     );
     row_new["eta_ts"] = ts_eta;
     row_new["eta_str"] = timestamp_to_datestr(ts_eta);
@@ -247,6 +291,7 @@ module.exports = {
   calc_remaining_items,
   isNumeric,
   linreg,
+  linreg_weighted,
   calc_row_new_delta,
   sort_data,
   read_html_input_number,
