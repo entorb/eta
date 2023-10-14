@@ -8,3 +8,4 @@ src/lib/
 .DS_Store
 src/1.js
 src/2.js
+src/audio/*.wav

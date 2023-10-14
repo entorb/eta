@@ -37,3 +37,7 @@ GitHub Actions are used to perform automated code quality checks upon PR creatio
 
 Spell checking via CSpell
 See `spelling.json` for custom dictionary
+
+## Credits
+
+* the notification sound `481151__matrixxx__cow-bells-01.wav` is from [freesound.org](https://freesound.org/people/MATRIXXX_/sounds/481151/)

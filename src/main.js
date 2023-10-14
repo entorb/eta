@@ -32,11 +32,14 @@ prevent entering non-numbers
 add delta1
 html placeholders
 weighted linreg instead, to put more weight on the latest items
+play notification sound when estimated time is reached
 
 TODO/IDEAS
 chart: choose to display remaining instead of items
 tabulator: use global data, and update column speed name upon switching unit
 echarts: use global data, and update speed unit
+store "hide_intro" as setting
+add simple time-only countdown+notification
 */
 
 //
@@ -178,6 +181,7 @@ function update_runtime_and_remaining() {
   let ms_remaining = total_timestamp_eta - Date.now();
   if (ms_remaining < 0) {
     ms_remaining = 0;
+    playSoundTimerDone();
     // stop timer
     clearInterval(interval_auto_refresh);
   }

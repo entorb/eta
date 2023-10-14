@@ -276,6 +276,24 @@ function read_html_input_number(html_input) {
   return Number(value_str);
 }
 
+/**
+ * play a sound of mp3 format
+ * @param {*} url of mp3 sound file
+ */
+function playSound(url) {
+  const audio = new Audio(url);
+  audio.play();
+}
+
+/**
+ * Play sound file for timer done
+ */
+function playSoundTimerDone() {
+  playSound('audio/481151__matrixxx__cow-bells-01.mp3');
+}
+
+
+
 // Export functions, needed for Jest unittests
 // Using this hack it works for both, jest and browser.
 // from https://stackoverflow.com/questions/66349868/jest-unit-testing-module-export-error-in-browser-console
@@ -295,4 +313,6 @@ module.exports = {
   calc_row_new_delta,
   sort_data,
   read_html_input_number,
+  playSound,
+  playSoundTimerDone,
 };
