@@ -3,10 +3,12 @@ countup
 datestr
 datetime
 echarts
+freesound
 linreg
 luxon
 Mastrodon
 matomo
+matrixxx
 prio
 recalc
 sleeptime
