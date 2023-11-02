@@ -1,6 +1,6 @@
 # ETA - estimated time of arrival
 
-Estimates remaining waiting time, hosted at <https://entorb.net/eta/v1/>. There now is a followup project at <https://github.com/entorb/eta-vue/>.
+Estimates remaining waiting time, hosted at <https://entorb.net/eta-v1/>. There now is a followup project at <https://github.com/entorb/eta-vue/>.
 
 ## Use cases
 
